@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PERPLEXITY FONT & DARK RESET */
+:root {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #191A1A; /* Signature Dark Background */
+  color: #E2E8F0; /* Zinc-200 text */
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  display: block;
+  width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar to match Dark Mode */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Hide scrollbar for horizontal lists */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
