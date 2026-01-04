@@ -1,5 +1,5 @@
 
-# 🧠 Alethiq - Neural Intelligence Engine
+#  Alethiq - Neural Intelligence Engine
 
 
 **Alethiq** is a next-generation AI chat platform capable of real-time streaming, complex query reasoning, and rich UI generation. It features a microservices architecture connecting a **React Frontend**, a **Java Spring Boot Backend**, and a **Python AI Engine**.
@@ -24,12 +24,12 @@
 
 ## 🌟 Key Features
 
-* **⚡ Real-Time Streaming:** Instant AI responses using Server-Sent Events (SSE) and Reactive Streams (Project Reactor).
-* **🔐 Secure Authentication:** Google OAuth2 integration with JWT-based session management.
-* **🎨 Generative UI:** The AI can render rich widgets (Stat Cards, Charts) alongside text responses.
-* **📱 Fully Responsive:** Mobile-first design with a collapsible sidebar and glassmorphism effects.
-* **💾 Persistent Memory:** automatically saves chat history and threads per user.
-* **📝 Markdown & Syntax Highlighting:** Full support for code blocks, tables, and formatted text.
+* ** Real-Time Streaming:** Instant AI responses using Server-Sent Events (SSE) and Reactive Streams (Project Reactor).
+* ** Secure Authentication:** Google OAuth2 integration with JWT-based session management.
+* ** Generative UI:** The AI can render rich widgets (Stat Cards, Charts) alongside text responses.
+* ** Fully Responsive:** Mobile-first design with a collapsible sidebar and glassmorphism effects.
+* ** Persistent Memory:** automatically saves chat history and threads per user.
+* ** Markdown & Syntax Highlighting:** Full support for code blocks, tables, and formatted text.
 
 ---
 
