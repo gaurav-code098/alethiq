@@ -24,7 +24,8 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("alethiq_token"));
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = "http://localhost:8080";
+  // ✅ CORRECT: Smartly switches between Live and Local
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   useEffect(() => {
     const initAuth = async () => {
