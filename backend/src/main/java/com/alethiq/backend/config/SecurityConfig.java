@@ -74,8 +74,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/health",
-                                "/api/chat/stream",  // <--- CRITICAL: Allow chat without login
-                                "/get-suggestions"   // <--- Allow suggestions without login
+                                "/api/chat/stream",
+                                "/get-suggestions"
                         ).permitAll()
                         // 🔒 EVERYTHING ELSE IS LOCKED
                         .anyRequest().authenticated()
@@ -101,7 +101,9 @@ public class SecurityConfig {
                             });
 
                             String token = jwtUtil.generateToken(user.getUsername());
-                            response.sendRedirect(frontendUrl + "?token=" + token);
+
+                            // 🟢 CRITICAL FIX: Hardcoded to force redirect to your Live Domain
+                            response.sendRedirect("https://alethiq.tech?token=" + token);
                         })
                 );
 
@@ -117,8 +119,8 @@ public class SecurityConfig {
                 "http://localhost:3000",                  // Localhost (React)
                 "http://localhost:5173",                  // Localhost (Vite)
                 "https://alethiq-frontend.vercel.app",    // Your Vercel URL
-                "https://alethiq.tech",
-                "https://www.alethiq.tech",
+                "https://alethiq.tech",                   // Your Custom Domain
+                "https://www.alethiq.tech",               // Your Custom Domain (www)
                 frontendUrl                               // The variable from properties
         ));
 
