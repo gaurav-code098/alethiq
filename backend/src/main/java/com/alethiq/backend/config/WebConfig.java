@@ -13,6 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "https://alethiq.vercel.app/", // 🟢 Your Live Vercel Frontend
                         "http://localhost:5173",
+                        "https://www.alethiq.tech/",
                         "https://alethiq.tech/",
                         "http://localhost:3000"                  // Localhost (React)
                 )

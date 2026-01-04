@@ -111,11 +111,21 @@ public class SecurityConfig {
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Allow Localhost AND Production URL
-        config.setAllowedOrigins(List.of("http://localhost:3000", frontendUrl));
+
+        // 🟢 UPDATE: Allow all your frontend versions
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",                  // Localhost (React)
+                "http://localhost:5173",                  // Localhost (Vite)
+                "https://alethiq-frontend.vercel.app",    // Your Vercel URL
+                "https://alethiq.tech",
+                "https://www.alethiq.tech",
+                frontendUrl                               // The variable from properties
+        ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
