@@ -20,10 +20,11 @@ export default defineConfig({
       },
       // If you have Java backend on 8080, add another proxy rule:
       '/auth': {
-        target: 'http://localhost:8080',
+        target: '"https://alethiq.onrender.com";',
         changeOrigin: true,
         secure: false,
       }
     },
   },
 })
+// 🟢 FORCE the live backend URL
