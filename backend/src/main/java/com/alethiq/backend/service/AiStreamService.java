@@ -21,7 +21,7 @@ public class AiStreamService {
     private ChatService chatService;
 
     public AiStreamService(WebClient.Builder webClientBuilder) {
-        String pythonUrl = "http://localhost:8000";
+        String pythonUrl = "https://gaurav-code098-alethiq.hf.space";
         this.webClient = webClientBuilder.baseUrl(pythonUrl).build();
     }
 
