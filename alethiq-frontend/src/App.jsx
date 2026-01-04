@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // ✅ CORRECT: Smartly switches between Live and Local
+  // This uses the VITE_API_URL from Vercel, or falls back to localhost if missing
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   useEffect(() => {
@@ -162,7 +163,9 @@ const AuthCard = ({ onClose }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { loginWithEmail } = useAuth();
+  
+  // 🟢 FIX: We now extract API_BASE so we can use it in the Google Link
+  const { loginWithEmail, API_BASE } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -181,8 +184,9 @@ const AuthCard = ({ onClose }) => {
         <p className="text-zinc-500 text-sm">{isSignUp ? "Join the Alethiq network" : "Sign in to your account"}</p>
       </div>
       
+      {/* 🟢 FIX: This link is now dynamic. It uses your Render URL in production and Localhost in development */}
       <a 
-        href="http://localhost:8080/oauth2/authorization/google"
+        href={`${API_BASE}/oauth2/authorization/google`}
         className="w-full flex items-center justify-center gap-3 py-3 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-all mb-4 text-sm"
       >
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="G" />
@@ -548,18 +552,18 @@ function App() {
                         animate={{ letterSpacing: "0.2em", opacity: 1, y: 0 }}
                         transition={{ duration: 1, ease: "easeOut" }}
                         className="text-6xl md:text-8xl font-light tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-400 to-zinc-800 font-sans mb-6 select-none"
-                     >
-                       ALETHIQ
-                     </motion.h1>
-                     
-                     <motion.p 
+                      >
+                        ALETHIQ
+                      </motion.h1>
+                      
+                      <motion.p 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.5, duration: 1 }}
                         className="text-[10px] md:text-xs text-zinc-600 font-mono tracking-[0.4em] uppercase"
-                     >
-                       Neural Intelligence Engine
-                     </motion.p>
+                      >
+                        Neural Intelligence Engine
+                      </motion.p>
                    </div>
 
                    <motion.div 
@@ -577,7 +581,7 @@ function App() {
                         stopStream={stopStream} 
                         hasHistory={hasHistory} 
                         isSidebarOpen={isSidebarOpen} 
-                     />
+                      />
                    </motion.div>
                    
                    <motion.div 
