@@ -26,7 +26,8 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ CORRECT: Smartly switches between Live and Local
   // This uses the VITE_API_URL from Vercel, or falls back to localhost if missing
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+ // 🟢 FORCE the production URL (Temporary fix to get it working)
+const API_BASE = "https://alethiq.onrender.com";
 
   useEffect(() => {
     const initAuth = async () => {
