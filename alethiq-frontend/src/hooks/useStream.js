@@ -30,7 +30,7 @@ export const useStream = () => {
 
     try {
       const token = localStorage.getItem("alethiq_token");
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const API_URL = import.meta.env.VITE_API_URL || "https://alethiq.onrender.com";
 
       const headers = { "Content-Type": "application/json" };
       if (token && token !== "null") headers["Authorization"] = `Bearer ${token}`;
@@ -59,7 +59,7 @@ export const useStream = () => {
       const response = await fetch(`${API_URL}/api/chat/stream`, {
         method: "POST",
         headers: headers,
-        body: JSON.stringify({ query: finalQuery, mode }), // 'mode' is ignored by backend now but safe to keep
+        body: JSON.stringify({ query: finalQuery, mode }), 
         signal: abortControllerRef.current.signal,
       });
 
