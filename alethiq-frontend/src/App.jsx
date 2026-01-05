@@ -563,7 +563,7 @@ function App() {
                         transition={{ delay: 0.5, duration: 1 }}
                         className="text-[10px] md:text-xs text-zinc-600 font-mono tracking-[0.4em] uppercase"
                       >
-                        Neural Intelligence Engine
+                         Intelligence  Search Engine
                       </motion.p>
                    </div>
 
