@@ -10,6 +10,9 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# 🟢 IMPORT GROQ DIRECTLY (For Deep Mode in main.py)
+from groq import Groq
+
 # --- Custom Services ---
 from services.search_service import search_tavily 
 from services.vector_service import init_vector_db, find_similar_context, store_knowledge
@@ -155,18 +158,41 @@ async def stream_processor(q: str, mode: str, background_tasks: BackgroundTasks)
                 if docs:
                     if docs[0].metadata: video_title = docs[0].metadata.get('title', "YouTube Video")
                     yield f"data: {json.dumps({'status': 'Reading Transcript...'})}\n\n"
+                    
                     full_transcript = " ".join([d.page_content for d in docs])
-                    transcript_text = full_transcript[:6000]
-                    if len(full_transcript) > 6000: transcript_text += "\n[...Truncated...]"
+                    
+                    # 🔴 FIX 1: Limit transcript to 3500 chars (safe zone for 70B model free tier)
+                    limit_chars = 3500 
+                    transcript_text = full_transcript[:limit_chars]
+                    if len(full_transcript) > limit_chars: 
+                        transcript_text += "\n[...Transcript Truncated due to size limit...]"
 
                     context_text = f"RAW TRANSCRIPT ({video_title}):\n{transcript_text}"
+                    
                     prompt = (
-                        f"The following is a raw transcript of the video '{video_title}'. "
-                        f"Identify language, translate to English internally, and answer: {q}"
+                        f"Analyze the following video transcript for '{video_title}'. "
+                        f"Summarize key points and answer: {q}"
                     )
 
-                    yield f"data: {json.dumps({'status': 'Translating & Analyzing...'})}\n\n"
-                    for token in stream_answer(prompt, context_text, mode=mode):
+                    yield f"data: {json.dumps({'status': 'Translating & Analyzing (Deep Mode)...'})}\n\n"
+                    
+                    # 🟢 FIX 2: Use Local Groq Client for 70B Model (Deep Mode)
+                    # We bypass llm_service here to use the better model directly
+                    deep_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+                    
+                    completion = deep_client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",  # <--- THE BETTER MODEL
+                        messages=[
+                            {"role": "system", "content": "You are a helpful AI video analyst. Summarize and answer based on the transcript."},
+                            {"role": "user", "content": f"Context: {context_text}\n\nQuestion: {prompt}"}
+                        ],
+                        stream=True,
+                        temperature=0.6,
+                        max_tokens=1024
+                    )
+
+                    for chunk in completion:
+                        token = chunk.choices[0].delta.content or ""
                         full_answer_accumulator += token 
                         yield f"data: {json.dumps({'answer_chunk': token})}\n\n"
                         await asyncio.sleep(0.005) 
@@ -224,7 +250,6 @@ async def stream_processor(q: str, mode: str, background_tasks: BackgroundTasks)
 
 # --- Endpoints ---
 
-# --- 🟢 ADD THE NEW CODE HERE ---
 @app.get("/get-suggestions")
 async def get_suggestions():
     # 1. Check Redis Cache first
