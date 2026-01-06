@@ -2,7 +2,7 @@
 
 # Alethiq 
   <p>
-    <strong>A Next-Generation Intelligent Search Engine  Engine</strong>
+    <strong>A Next-Generation Intelligent Search Engine</strong>
   </p>
   <br />
 
