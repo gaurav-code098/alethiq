@@ -1,37 +1,60 @@
+<div align="center">
 
-#  Alethiq - Neural Intelligence Engine
+# Alethiq 
+  <p>
+    <strong>A Next-Generation Intelligent Search Engine  Engine</strong>
+  </p>
+  <br />
 
+  <br />
+  <br />
 
-**Alethiq** is a next-generation AI chat platform capable of real-time streaming, complex query reasoning, and rich UI generation. It features a microservices architecture connecting a **React Frontend**, a **Java Spring Boot Backend**, and a **Python AI Engine**.
+  ![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)
+  ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.0-green?style=flat-square&logo=springboot)
+  ![React](https://img.shields.io/badge/React-18-blue?style=flat-square&logo=react)
+  ![Python](https://img.shields.io/badge/Python-3.10-yellow?style=flat-square&logo=python)
+  ![Redis](https://img.shields.io/badge/Redis-Cache-red?style=flat-square&logo=redis)
+  ![MongoDB](https://img.shields.io/badge/MongoDB-Chat_History-47A248?style=flat-square&logo=mongodb&logoColor=white)
+  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Vectors_%26_Auth-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 
-🚀 **Live Demo:** [https://alethiq.tech](https://alethiq.tech)
-
----
-
-## 📑 Table of Contents
-- [🌟 Key Features](#-key-features)
-- [🏗️ Architecture](#-architecture)
-- [🛠️ Tech Stack](#-tech-stack)
-- [⚙️ Environment Variables](#-environment-variables)
-- [🚀 Local Installation & Setup](#-local-installation--setup)
-  - [1. AI Engine (Python)](#1-ai-engine-python)
-  - [2. Backend (Java Spring Boot)](#2-backend-java-spring-boot)
-  - [3. Frontend (React + Vite)](#3-frontend-react--vite)
-- [☁️ Deployment](#-deployment)
-- [🤝 Contributing](#-contributing)
-
----
-
-## 🌟 Key Features
-
-* ** Real-Time Streaming:** Instant AI responses using Server-Sent Events (SSE) and Reactive Streams (Project Reactor).
-* ** Secure Authentication:** Google OAuth2 integration with JWT-based session management.
-* ** Generative UI:** The AI can render rich widgets (Stat Cards, Charts) alongside text responses.
-* ** Fully Responsive:** Mobile-first design with a collapsible sidebar and glassmorphism effects.
-* ** Persistent Memory:** automatically saves chat history and threads per user.
-* ** Markdown & Syntax Highlighting:** Full support for code blocks, tables, and formatted text.
+</div>
 
 ---
+
+## ✨ Overview
+
+**Alethiq** is an AI-powered search and reasoning engine that bridges the gap between static LLM knowledge and real-time data. Unlike standard chatbots, Alethiq can **browse the web**, **watch YouTube videos**, and **generate dynamic UI widgets** on the fly.
+
+It relies on a distributed microservices architecture, leveraging **Java Spring Boot** for orchestration, **Python** for neural inference, and a **Hybrid Database Strategy** (MongoDB + PostgreSQL) for optimal data management.
+
+## 🚀 Key Features
+
+<table>
+  <tr>
+    <td width="50%">
+      <h3>🎨 Generative UI</h3>
+      <p>Alethiq doesn't just reply with text. It renders <strong>interactive widgets</strong>, charts, and financial cards in real-time based on the context of the conversation.</p>
+    </td>
+    <td width="50%">
+      <h3>📺 YouTube Intelligence</h3>
+      <p><strong>New:</strong> A dedicated pipeline that ingests, transcribes, and analyzes YouTube video content, allowing users to "chat" with videos and extract key insights.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>💾 Hybrid Storage Engine</h3>
+      <p>
+        <strong>PostgreSQL (Neon):</strong> Stores User Auth & high-dimensional <strong>Search Embeddings</strong>.<br/>
+        <strong>MongoDB (Atlas):</strong> optimized for storing unstructured <strong>Chat History</strong> and conversation threads.
+      </p>
+    </td>
+    <td width="50%">
+      <h3>🚀 Redis Acceleration</h3>
+      <p><strong>New:</strong> Integrated <strong>Redis</strong> caching layer to store session context and frequent query vectors, drastically reducing load times.</p>
+    </td>
+  </tr>
+</table>
+<H4>NOTE:- YouTube Intelligence Pipeline is under Maintenance.  </H3>
 
 ## 🏗️ Architecture
 
@@ -42,12 +65,49 @@ Alethiq follows a **Microservices-style** architecture:
 3.  **AI Engine (Hugging Face):** A Python FastAPI service hosting the LLM inference logic.
 
 ```mermaid
-graph LR
-  Client[React Frontend] -- HTTPS/JSON --> Backend[Spring Boot API]
-  Backend -- gRPC/HTTP --> AI[Python AI Engine]
-  Backend -- JDBC --> DB[(Database)]
-  Backend -- OAuth2 --> Google[Google Auth]
+graph TD
+  subgraph Client ["Client Layer"]
+    UI[React Frontend]
+  end
 
+  subgraph Orchestrator ["Backend Orchestrator"]
+    API[API Gateway]
+    Security[Spring Security]
+    History[Chat History Service]
+  end
+
+  subgraph AI ["AI Engine"]
+    LLM[LLM Inference]
+    RAG[Vector Search]
+    YTP[YouTube Pipeline]
+  end
+
+  subgraph Data ["Data Layer"]
+    Redis[(Redis)]
+    Mongo[(MongoDB)]
+    Postgres[(PostgreSQL)]
+  end
+
+  subgraph External ["External"]
+    Google[Google Auth]
+    YT[YouTube API]
+  end
+
+  UI --> Security
+  Security <--> Google
+  Security --> Postgres
+
+  UI <--> API
+  API --> Redis
+  
+  API --> LLM
+  LLM --> RAG
+  RAG <--> Postgres
+  LLM --> YTP
+  YTP <--> YT
+
+  API --> History
+  History --> Mongo
 ```
 
 ---
