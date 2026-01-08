@@ -126,7 +126,7 @@ graph TD
 * **Core:** Java 17, Spring Boot 3
 * **Security:** Spring Security, OAuth2 Client, JWT
 * **Reactive:** Spring WebFlux (for streaming)
-* **Database:** PostgreSQL / MySQL (JPA/Hibernate)
+* **Database:** PostgreSQL / MongoDB (JPA/Hibernate)
 
 ### **AI Engine**
 
