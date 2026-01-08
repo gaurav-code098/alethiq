@@ -127,6 +127,7 @@ graph TD
 * **Security:** Spring Security, OAuth2 Client, JWT
 * **Reactive:** Spring WebFlux (for streaming)
 * **Database:** PostgreSQL / MongoDB (JPA/Hibernate)
+* **Caching:** Redis Upstash
 
 ### **AI Engine**
 
