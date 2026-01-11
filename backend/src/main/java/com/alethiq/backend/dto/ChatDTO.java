@@ -25,4 +25,13 @@ public class ChatDTO {
             String query,
             String mode //
     ) {}
+
+    // Inside ChatDTO.java
+    public record SaveConversationRequest(
+    String username,
+    String query,
+    String answer
+    ) {}
+
+    
 }
