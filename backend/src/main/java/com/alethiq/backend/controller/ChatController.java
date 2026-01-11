@@ -51,24 +51,28 @@ public class ChatController {
     // 🟢 THIS WAS MISSING! (The "Mailbox" for saving chats)
    // ... inside ChatController ...
 
+    // 🟢 REPLACE THE OLD saveConversation METHOD WITH THIS:
     @PostMapping("/save-conversation")
-    public ResponseEntity<Chat> saveConversation(
-            @RequestBody ChatDTO.SaveConversationRequest request,
-            Principal principal // 🟢 GET USER FROM SECURITY TOKEN
-    ) {
-        if (principal == null) {
-            return ResponseEntity.status(403).build(); // Security check
-        }
+    public ResponseEntity<?> saveConversation(@RequestBody java.util.Map<String, String> payload, Principal principal) {
+        // 1. Check Auth
+        if (principal == null) return ResponseEntity.status(403).body("Not logged in");
         
         String username = principal.getName();
-        System.out.println("💾 Saving Chat for: " + username);
-        
-        // Pass the verified username to the service
-        Chat savedChat = chatService.saveFullConversation(
-            username, 
-            request.query(), 
-            request.answer()
-        );
+        System.out.println("📢 RAW SAVE REQUEST RECEIVED from: " + username);
+        System.out.println("📦 Payload: " + payload);
+
+        // 2. Extract Data Manually (Safer than DTO for now)
+        String query = payload.get("query");
+        String answer = payload.get("answer");
+
+        if (query == null || answer == null) {
+             System.out.println("❌ Missing query or answer in payload!");
+             return ResponseEntity.badRequest().body("Missing query or answer");
+        }
+
+        // 3. Save
+        Chat savedChat = chatService.saveFullConversation(username, query, answer);
+        System.out.println("✅ SAVED TO DB: " + savedChat.getId());
         
         return ResponseEntity.ok(savedChat);
     }
