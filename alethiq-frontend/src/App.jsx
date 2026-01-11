@@ -390,11 +390,18 @@ function App() {
   }, []);
 
   const fetchHistory = () => {
-    if (user && user.username && token) {
-      // 🟡 Hits Java (API_BASE)
-      fetch(`${API_BASE}/api/chat/user/${user.username}`, { headers: { Authorization: `Bearer ${token}` } })
+ 
+    if (user && user.id && token) {
+      
+      
+      fetch(`${API_BASE}/api/chat/user/${user.id}`, { 
+          headers: { Authorization: `Bearer ${token}` } 
+      })
       .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setThreads(data.reverse()); else setThreads([]); })
+      .then(data => { 
+          if (Array.isArray(data)) setThreads(data.reverse()); 
+          else setThreads([]); 
+      })
       .catch(err => console.error("History fetch error:", err));
     }
   };
