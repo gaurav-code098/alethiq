@@ -3,9 +3,12 @@ package com.alethiq.backend.service;
 import com.alethiq.backend.dto.ChatDTO;
 import com.alethiq.backend.entity.Chat;
 import com.alethiq.backend.entity.Message;
+import com.alethiq.backend.entity.User; // Import User
 import com.alethiq.backend.repository.ChatRepository;
+import com.alethiq.backend.repository.UserRepository; // Import UserRepository
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Good practice
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,7 +20,11 @@ public class ChatService {
     @Autowired
     private ChatRepository repository;
 
-    // --- EXISTING METHODS ---
+    @Autowired
+    private UserRepository userRepository; // 🟢 Added to look up User ID from Username
+
+    // --- EXISTING METHODS (Kept mostly the same) ---
+
     public Chat createChat(ChatDTO.NewChatRequest request) {
         Chat chat = new Chat();
         chat.setId(UUID.randomUUID().toString());
@@ -45,26 +52,35 @@ public class ChatService {
         return repository.findById(id).orElseThrow(() -> new RuntimeException("Chat not found"));
     }
 
-    // --- 🟢 NEW: SAVE STREAMED CONVERSATION ---
-    public void saveConversation(String userId, String question, String fullResponse) {
+    // --- 🟢 NEW: THE MISSING METHOD (Fixes Compilation Error) ---
+    
+    @Transactional
+    public Chat saveFullConversation(String username, String query, String answer) {
+        // 1. Resolve Username -> UserId
+        // The frontend sends "username", but your DB needs "userId" string.
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        
+        // Assuming your User entity has an ID that can be converted to String
+        String userId = String.valueOf(user.getId()); 
+
+        // 2. Create Chat Object (Using YOUR existing style)
         Chat chat = new Chat();
-        chat.setId(UUID.randomUUID().toString());
-        chat.setUserId(userId);
+        chat.setId(UUID.randomUUID().toString()); // Manual UUID
+        chat.setUserId(userId);                   // Set the ID string
 
-        // Generate title from first 30 chars
-        String title = question.length() > 30 ? question.substring(0, 30) + "..." : question;
+        // 3. Set Title
+        String title = query.length() > 30 ? query.substring(0, 30) + "..." : query;
         chat.setTitle(title);
-
         chat.setCreatedAt(LocalDateTime.now());
 
-        // Add User Question
-        chat.getMessages().add(new Message("USER", question, LocalDateTime.now()));
+        // 4. Add Messages (Using YOUR existing Message constructor)
+        chat.getMessages().add(new Message("USER", query, LocalDateTime.now()));
+        chat.getMessages().add(new Message("AI", answer, LocalDateTime.now()));
 
-        // Add AI Response
-        chat.getMessages().add(new Message("AI", fullResponse, LocalDateTime.now()));
+        System.out.println("💾 Saving Chat: " + title + " for UserID: " + userId);
 
-        // Save to Database
-        repository.save(chat);
-        System.out.println("💾 Chat saved to MongoDB for user: " + userId);
+        // 5. Save
+        return repository.save(chat);
     }
 }
