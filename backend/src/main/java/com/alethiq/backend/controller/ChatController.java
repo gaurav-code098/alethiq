@@ -49,13 +49,23 @@ public class ChatController {
     }
 
     // 🟢 THIS WAS MISSING! (The "Mailbox" for saving chats)
+   // ... inside ChatController ...
+
     @PostMapping("/save-conversation")
-    public ResponseEntity<Chat> saveConversation(@RequestBody ChatDTO.SaveConversationRequest request) {
-        System.out.println("💾 Saving conversation for: " + request.username());
+    public ResponseEntity<Chat> saveConversation(
+            @RequestBody ChatDTO.SaveConversationRequest request,
+            Principal principal // 🟢 GET USER FROM SECURITY TOKEN
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(403).build(); // Security check
+        }
         
-        // Ensure you added 'saveFullConversation' to your ChatService.java!
+        String username = principal.getName();
+        System.out.println("💾 Saving Chat for: " + username);
+        
+        // Pass the verified username to the service
         Chat savedChat = chatService.saveFullConversation(
-            request.username(), 
+            username, 
             request.query(), 
             request.answer()
         );
