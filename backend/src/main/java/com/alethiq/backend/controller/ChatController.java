@@ -1,9 +1,10 @@
 package com.alethiq.backend.controller;
+
 import org.springframework.security.core.Authentication;
 import com.alethiq.backend.dto.ChatDTO;
 import com.alethiq.backend.entity.Chat;
 import com.alethiq.backend.service.ChatService;
-import com.alethiq.backend.service.AiStreamService; // Import the new service
+import com.alethiq.backend.service.AiStreamService; 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -16,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // ✅ Allows Vercel to talk to Render
 public class ChatController {
 
     @Autowired
@@ -47,21 +48,28 @@ public class ChatController {
         return ResponseEntity.ok(chatService.getChatById(id));
     }
 
+    // 🟢 THIS WAS MISSING! (The "Mailbox" for saving chats)
+    @PostMapping("/save-conversation")
+    public ResponseEntity<Chat> saveConversation(@RequestBody ChatDTO.SaveConversationRequest request) {
+        System.out.println("💾 Saving conversation for: " + request.username());
+        
+        // Ensure you added 'saveFullConversation' to your ChatService.java!
+        Chat savedChat = chatService.saveFullConversation(
+            request.username(), 
+            request.query(), 
+            request.answer()
+        );
+        
+        return ResponseEntity.ok(savedChat);
+    }
+
     // --- STREAMING ENDPOINT ---
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(@RequestBody ChatDTO.StreamRequest request, Principal principal) {
-
-        // 1. Safe User Check (Fixes the crash)
-        // If principal is null (logged out), we use "Anonymous"
         String username = (principal != null) ? principal.getName() : "Anonymous";
-
-        // 2. Extract Query safely from the DTO
         String query = request.query();
-
         System.out.println("🔹 Request from: " + username + " | Query: " + query);
-
-        // 3. Call Service
         return aiStreamService.streamAnswer(query, username, "fast");
     }
 }
