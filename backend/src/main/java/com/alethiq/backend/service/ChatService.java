@@ -54,33 +54,26 @@ public class ChatService {
 
     // --- 🟢 NEW: THE MISSING METHOD (Fixes Compilation Error) ---
     
+  // ... inside ChatService ...
+
     @Transactional
     public Chat saveFullConversation(String username, String query, String answer) {
-        // 1. Resolve Username -> UserId
-        // The frontend sends "username", but your DB needs "userId" string.
+        // 🟢 FIND USER BY USERNAME (Matches the Token)
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
-        
-        // Assuming your User entity has an ID that can be converted to String
-        String userId = String.valueOf(user.getId()); 
 
-        // 2. Create Chat Object (Using YOUR existing style)
+        // Create Chat
         Chat chat = new Chat();
-        chat.setId(UUID.randomUUID().toString()); // Manual UUID
-        chat.setUserId(userId);                   // Set the ID string
+        chat.setId(java.util.UUID.randomUUID().toString());
+        chat.setUserId(String.valueOf(user.getId())); // Store the ID for the database
+        
+        chat.setTitle(query.length() > 30 ? query.substring(0, 30) + "..." : query);
+        chat.setCreatedAt(java.time.LocalDateTime.now());
 
-        // 3. Set Title
-        String title = query.length() > 30 ? query.substring(0, 30) + "..." : query;
-        chat.setTitle(title);
-        chat.setCreatedAt(LocalDateTime.now());
+        // Add Messages
+        chat.getMessages().add(new Message("USER", query, java.time.LocalDateTime.now()));
+        chat.getMessages().add(new Message("AI", answer, java.time.LocalDateTime.now()));
 
-        // 4. Add Messages (Using YOUR existing Message constructor)
-        chat.getMessages().add(new Message("USER", query, LocalDateTime.now()));
-        chat.getMessages().add(new Message("AI", answer, LocalDateTime.now()));
-
-        System.out.println("💾 Saving Chat: " + title + " for UserID: " + userId);
-
-        // 5. Save
         return repository.save(chat);
     }
 }
