@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("alethiq_token"));
   const [loading, setLoading] = useState(true);
 
-  // 🔴 JAVA BACKEND (Render) - Used for Auth, History, and Streaming
+  // 🔴 JAVA BACKEND (Render) - Used for Auth, History
   const API_BASE = "https://alethiq.onrender.com";
 
   useEffect(() => {
@@ -377,11 +377,13 @@ function App() {
   const mainScrollRef = useRef(null);
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [suggestions, setSuggestions] = useState([]);
+  // 🟢 NEW: Store last query so we can save it to Java later
+  const [lastQuery, setLastQuery] = useState("");
    
   const { user, token, API_BASE } = useAuth();
   const { data, sources, images, status, isStreaming, streamData, stopStream } = useStream();
 
-  // 🟢 URL FOR SUGGESTIONS (Points to Python/Hugging Face directly)
+  // 🟢 URL FOR SUGGESTIONS
   const SUGGESTIONS_URL = "https://gaurav-code098-alethiq.hf.space";
 
   useEffect(() => {
@@ -391,7 +393,6 @@ function App() {
 
   const fetchHistory = () => {
     if (user && user.username && token) {
-      // 🟡 Hits Java (API_BASE)
       fetch(`${API_BASE}/api/chat/user/${user.username}`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setThreads(data.reverse()); else setThreads([]); })
@@ -411,12 +412,12 @@ function App() {
     if(isMobile) setIsSidebarOpen(false);
   };
 
-  // 🟢 FETCH SUGGESTIONS FROM PYTHON DIRECTLY
+  // 🟢 FETCH SUGGESTIONS (With Cache Buster)
   useEffect(() => {
     const fetchSuggestions = async () => {
         try {
-            // 🟡 Hits Python (SUGGESTIONS_URL)
-            const res = await fetch(`${SUGGESTIONS_URL}/get-suggestions`);
+            // 🟡 Added ?t=timestamp to force new topics
+            const res = await fetch(`${SUGGESTIONS_URL}/get-suggestions?t=${Date.now()}`);
             if (res.ok) {
                 const data = await res.json();
                 setSuggestions(data);
@@ -424,19 +425,43 @@ function App() {
                 throw new Error("Failed to fetch suggestions");
             }
         } catch (e) {
-            console.warn("Using fallback suggestions due to API error:", e);
-            const fallback = [
-                "James Webb Telescope", "Generative UI Design", "Terraforming Mars", 
-                "6G Networks", "Quantum Computing", "Future of CRISPR"
-            ];
+            console.warn("Using fallback suggestions:", e);
+            const fallback = ["James Webb Telescope", "Generative UI", "SpaceX", "React vs Vue"];
             setSuggestions(fallback.sort(() => 0.5 - Math.random()).slice(0, 4));
         } finally {
             setLoadingSuggestions(false);
         }
     };
-
     fetchSuggestions();
   }, []); 
+
+  // 🟢 SAVE TO JAVA HISTORY (The Coordinator)
+  const saveToHistory = async (userQ, aiA) => {
+    if (!user || !token) return;
+    try {
+        // NOTE: Ensure your Java Backend has an endpoint that accepts this structure.
+        // If not, you might need to use /api/chat/new or similar.
+        // This assumes a generic save endpoint exists or you add it.
+        await fetch(`${API_BASE}/api/chat/save-conversation`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                userId: user.id,
+                username: user.username,
+                query: userQ,
+                answer: aiA,
+                sources: sources || []
+            })
+        });
+        // Reload history sidebar
+        fetchHistory();
+    } catch (e) {
+        console.error("Failed to save history:", e);
+    }
+  };
 
   const handleScroll = (e) => {
       const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -454,6 +479,7 @@ function App() {
     
     setChatHistory(prev => [...prev, { type: 'user', content: searchQuery }]);
     setQuery(""); 
+    setLastQuery(searchQuery); // 🟡 Save this for later
     setAutoScroll(true); 
     
     streamData(searchQuery, "fast", currentHistory);
@@ -461,11 +487,17 @@ function App() {
 
   const handleNewChat = () => { setChatHistory([]); setQuery(""); stopStream(); };
 
+  // 🟢 DETECT STREAM END -> SAVE TO JAVA
   const prevStreaming = useRef(false);
   useEffect(() => {
+    // If stream just stopped AND we have data...
     if (prevStreaming.current && !isStreaming && data) {
         setChatHistory(prev => [...prev, { type: 'ai', content: data, sources, images }]);
-        if (user) setTimeout(() => { fetchHistory(); }, 1000); 
+        
+        // 🟡 Call Java to save the conversation
+        if (user && lastQuery) {
+            saveToHistory(lastQuery, data);
+        }
     }
     prevStreaming.current = isStreaming;
   }, [isStreaming, data, sources, images, user, token, API_BASE]);
