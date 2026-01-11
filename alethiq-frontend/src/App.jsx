@@ -377,6 +377,9 @@ function App() {
   const mainScrollRef = useRef(null);
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [suggestions, setSuggestions] = useState([]);
+
+  // 🟢 1. NEW: Track last query to save it later
+  const [lastQuery, setLastQuery] = useState("");
    
   const { user, token, API_BASE } = useAuth();
   const { data, sources, images, status, isStreaming, streamData, stopStream } = useStream();
@@ -390,10 +393,7 @@ function App() {
   }, []);
 
   const fetchHistory = () => {
- 
     if (user && user.id && token) {
-      
-      
       fetch(`${API_BASE}/api/chat/user/${user.id}`, { 
           headers: { Authorization: `Bearer ${token}` } 
       })
@@ -407,6 +407,27 @@ function App() {
   };
 
   useEffect(() => { fetchHistory(); }, [user, token, API_BASE]);
+
+  // 🟢 2. NEW: Save to History Function
+  const saveToHistory = async (userQ, aiA) => {
+    if (!token) return;
+    try {
+        await fetch(`${API_BASE}/api/chat/save-conversation`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                query: userQ,
+                answer: aiA
+            })
+        });
+        fetchHistory(); // Refresh sidebar
+    } catch (e) {
+        console.error("Save failed:", e);
+    }
+  };
 
   const handleLoadThread = (thread) => {
     setChatHistory([]); 
@@ -461,6 +482,7 @@ function App() {
     
     setChatHistory(prev => [...prev, { type: 'user', content: searchQuery }]);
     setQuery(""); 
+    setLastQuery(searchQuery); // 🟢 3. NEW: Save query to state
     setAutoScroll(true); 
     
     streamData(searchQuery, "fast", currentHistory);
@@ -470,12 +492,16 @@ function App() {
 
   const prevStreaming = useRef(false);
   useEffect(() => {
+    // 🟢 4. NEW: Trigger save when stream ends
     if (prevStreaming.current && !isStreaming && data) {
         setChatHistory(prev => [...prev, { type: 'ai', content: data, sources, images }]);
-        if (user) setTimeout(() => { fetchHistory(); }, 1000); 
+        
+        if (user && lastQuery) {
+             saveToHistory(lastQuery, data);
+        }
     }
     prevStreaming.current = isStreaming;
-  }, [isStreaming, data, sources, images, user, token, API_BASE]);
+  }, [isStreaming, data, sources, images, user, token, API_BASE, lastQuery]);
 
   const hasHistory = chatHistory.length > 0;
 
