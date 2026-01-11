@@ -9,7 +9,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { 
   Search, ArrowRight, Layers, Plus, Sparkles, 
   BrainCircuit, Copy, Check, StopCircle, 
-  PanelLeftClose, PanelLeftOpen, LogIn, LogOut, User, X, MessageSquare, History, RefreshCw, Square, Cpu
+  PanelLeftClose, PanelLeftOpen, LogIn, LogOut, User, X, MessageSquare, History, RefreshCw, Square
 } from "lucide-react";
 
 // Widgets
@@ -24,10 +24,8 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("alethiq_token"));
   const [loading, setLoading] = useState(true);
 
-  // ✅ CORRECT: Smartly switches between Live and Local
-  // This uses the VITE_API_URL from Vercel, or falls back to localhost if missing
- // 🟢 FORCE the production URL (Temporary fix to get it working)
-const API_BASE = "https://alethiq.onrender.com";
+  // 🔴 JAVA BACKEND (Render) - Used for Auth, History, and Streaming
+  const API_BASE = "https://alethiq.onrender.com";
 
   useEffect(() => {
     const initAuth = async () => {
@@ -41,7 +39,7 @@ const API_BASE = "https://alethiq.onrender.com";
       }
 
       const storedToken = tokenFromUrl || localStorage.getItem("alethiq_token");
-      
+       
       if (!storedToken || storedToken === "null") {
         setLoading(false);
         return;
@@ -103,7 +101,7 @@ const API_BASE = "https://alethiq.onrender.com";
     setToken(null);
     setUser(null);
   };
-  
+   
   return (
     <AuthContext.Provider value={{ user, token, loginWithEmail, logout, loading, API_BASE }}>
       {!loading && children}
@@ -164,8 +162,7 @@ const AuthCard = ({ onClose }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
-  // 🟢 FIX: We now extract API_BASE so we can use it in the Google Link
+   
   const { loginWithEmail, API_BASE } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -184,8 +181,7 @@ const AuthCard = ({ onClose }) => {
         <h1 className="text-2xl font-semibold text-white">{isSignUp ? "Create account" : "Welcome back"}</h1>
         <p className="text-zinc-500 text-sm">{isSignUp ? "Join the Alethiq network" : "Sign in to your account"}</p>
       </div>
-      
-      {/* 🟢 FIX: This link is now dynamic. It uses your Render URL in production and Localhost in development */}
+       
       <a 
         href={`${API_BASE}/oauth2/authorization/google`}
         className="w-full flex items-center justify-center gap-3 py-3 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-all mb-4 text-sm"
@@ -246,7 +242,7 @@ const MarkdownComponents = {
 
 const AnswerSection = ({ data, isTyping, status }) => { 
   const [copied, setCopied] = useState(false); 
-  
+   
   const contentParts = useMemo(() => {
     if (!data) return [];
     
@@ -277,7 +273,7 @@ const AnswerSection = ({ data, isTyping, status }) => {
   }, [data]);
 
   const handleCopy = async () => { await navigator.clipboard.writeText(data.replace(/:::.*?:::/gs, '')); setCopied(true); setTimeout(() => setCopied(false), 2000); }; 
-  
+   
   return ( 
     <div className="relative group/answer"> 
       <div className="flex items-center gap-3 mb-4 md:mb-6 min-h-[24px]"> {isTyping ? ( <> <BrainCircuit className="w-4 h-4 md:w-5 md:h-5 text-teal-400 animate-pulse" /> <span className="text-xs md:text-sm font-mono tracking-widest uppercase text-teal-400/90 animate-pulse">{status || "Processing"}</span> </> ) : <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-zinc-700" />} </div> 
@@ -312,63 +308,65 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
   ); 
 };
 
-// 🟢 REMOVED "DEEP MODE" BUTTONS & LOGIC
-const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming, stopStream, hasHistory, isSidebarOpen }) => (
-    <div 
-        className={`w-full transition-all duration-300 ${fixed 
-            ? `fixed bottom-6 left-0 flex justify-center z-40 px-4 ${isSidebarOpen ? 'md:pl-[260px]' : 'md:pl-0'}` 
-            : ""
-        }`}
-    >
-        <div className={`w-full max-w-3xl transition-all relative group`}>
-            <form 
-                onSubmit={(e) => { e.preventDefault(); handleSearch(query); }} 
-                className={`relative flex items-center rounded-3xl transition-all duration-300
-                    ${fixed 
-                        ? "bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 p-2 shadow-2xl" 
-                        : "bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] px-5 py-3 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)]"
-                    }`}
-            >
-                <div className={`flex items-center w-full ${fixed ? "pl-3" : ""}`}>
-                    {!fixed && <Search className="w-4 h-4 text-zinc-500 mr-4 opacity-50" />}
-                    <input 
-                        className={`w-full bg-transparent text-zinc-200 outline-none font-light placeholder:text-zinc-600/70 tracking-wide
-                            ${fixed ? "text-base h-10" : "text-sm md:text-base h-8"}`} 
-                        placeholder={fixed ? "Ask a follow-up..." : "What do you want to discover?"} 
-                        value={query} 
-                        onChange={(e) => setQuery(e.target.value)} 
-                        autoFocus={!hasHistory}
-                    />
-                    
-                    <div className="ml-1 flex items-center justify-center pl-3">
-                        {isStreaming ? (
-                            <button 
-                                type="button" 
-                                onClick={stopStream} 
-                                className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
-                            >
-                                <Square size={12} fill="currentColor" />
-                            </button>
-                        ) : (
-                            <button 
-                                type="submit" 
-                                disabled={!query.trim()} 
-                                className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-600 hover:text-zinc-200 hover:bg-white/10 transition-all duration-300 disabled:opacity-0 disabled:hover:bg-transparent"
-                            >
-                                <ArrowRight size={16} />
-                            </button>
-                        )}
+// 🟢 SEARCH FORM
+const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming, stopStream, hasHistory, isSidebarOpen }) => {
+    return (
+        <div 
+            className={`w-full transition-all duration-300 ${fixed 
+                ? `fixed bottom-6 left-0 flex justify-center z-40 px-4 ${isSidebarOpen ? 'md:pl-[260px]' : 'md:pl-0'}` 
+                : ""
+            }`}
+        >
+            <div className={`w-full max-w-3xl transition-all relative group`}>
+                <form 
+                    onSubmit={(e) => { e.preventDefault(); handleSearch(query); }} 
+                    className={`relative flex items-center rounded-3xl transition-all duration-300
+                        ${fixed 
+                            ? "bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 p-2 shadow-2xl" 
+                            : "bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] px-5 py-3 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)]"
+                        }`}
+                >
+                    <div className={`flex items-center w-full ${fixed ? "pl-3" : ""}`}>
+                        
+                        {!fixed && <Search className="w-4 h-4 text-zinc-500 mr-4 opacity-50" />}
+                        <input 
+                            className={`w-full bg-transparent text-zinc-200 outline-none font-light placeholder:text-zinc-600/70 tracking-wide
+                                ${fixed ? "text-base h-10" : "text-sm md:text-base h-8"}`} 
+                            placeholder={fixed ? "Ask a follow-up..." : "What do you want to discover?"} 
+                            value={query} 
+                            onChange={(e) => setQuery(e.target.value)} 
+                            autoFocus={!hasHistory}
+                        />
+                        
+                        <div className="ml-1 flex items-center justify-center pl-3">
+                            {isStreaming ? (
+                                <button 
+                                    type="button" 
+                                    onClick={stopStream} 
+                                    className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                                >
+                                    <Square size={12} fill="currentColor" />
+                                </button>
+                            ) : (
+                                <button 
+                                    type="submit" 
+                                    disabled={!query.trim()} 
+                                    className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-600 hover:text-zinc-200 hover:bg-white/10 transition-all duration-300 disabled:opacity-0 disabled:hover:bg-transparent"
+                                >
+                                    <ArrowRight size={16} />
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // --- MAIN APP ---
 function App() {
   const [query, setQuery] = useState("");
-  // 🟢 Removed 'mode' state
   const [chatHistory, setChatHistory] = useState([]); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -379,9 +377,12 @@ function App() {
   const mainScrollRef = useRef(null);
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [suggestions, setSuggestions] = useState([]);
-  
+   
   const { user, token, API_BASE } = useAuth();
   const { data, sources, images, status, isStreaming, streamData, stopStream } = useStream();
+
+  // 🟢 URL FOR SUGGESTIONS (Points to Python/Hugging Face directly)
+  const SUGGESTIONS_URL = "https://gaurav-code098-alethiq.hf.space";
 
   useEffect(() => {
     const checkMobile = () => { const mobile = window.innerWidth < 768; setIsMobile(mobile); setIsSidebarOpen(!mobile); };
@@ -390,6 +391,7 @@ function App() {
 
   const fetchHistory = () => {
     if (user && user.username && token) {
+      // 🟡 Hits Java (API_BASE)
       fetch(`${API_BASE}/api/chat/user/${user.username}`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setThreads(data.reverse()); else setThreads([]); })
@@ -409,17 +411,32 @@ function App() {
     if(isMobile) setIsSidebarOpen(false);
   };
 
+  // 🟢 FETCH SUGGESTIONS FROM PYTHON DIRECTLY
   useEffect(() => {
-    const allSuggestions = [
-        "James Webb Telescope Discoveries", "Generative UI Design", "Terraforming Mars", 
-        "6G Network Capabilities", "Neuromorphic Engineering", "Quantum Cryptography",
-        "The Future of CRISPR", "Deep Ocean Exploration", "Fusion Energy Milestones",
-        "AI in Drug Discovery", "Sustainable Urban Planning", "SpaceX Starship Updates"
-    ];
-    const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
-    setSuggestions(shuffled.slice(0, 4));
-    setLoadingSuggestions(false);
-  }, []);
+    const fetchSuggestions = async () => {
+        try {
+            // 🟡 Hits Python (SUGGESTIONS_URL)
+            const res = await fetch(`${SUGGESTIONS_URL}/get-suggestions`);
+            if (res.ok) {
+                const data = await res.json();
+                setSuggestions(data);
+            } else {
+                throw new Error("Failed to fetch suggestions");
+            }
+        } catch (e) {
+            console.warn("Using fallback suggestions due to API error:", e);
+            const fallback = [
+                "James Webb Telescope", "Generative UI Design", "Terraforming Mars", 
+                "6G Networks", "Quantum Computing", "Future of CRISPR"
+            ];
+            setSuggestions(fallback.sort(() => 0.5 - Math.random()).slice(0, 4));
+        } finally {
+            setLoadingSuggestions(false);
+        }
+    };
+
+    fetchSuggestions();
+  }, []); 
 
   const handleScroll = (e) => {
       const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -434,10 +451,11 @@ function App() {
   const handleSearch = (searchQuery) => {
     if (!searchQuery?.trim()) return;
     const currentHistory = [...chatHistory];
+    
     setChatHistory(prev => [...prev, { type: 'user', content: searchQuery }]);
     setQuery(""); 
     setAutoScroll(true); 
-    // 🟢 Hardcoded "fast" mode since toggle is gone
+    
     streamData(searchQuery, "fast", currentHistory);
   };
 
@@ -521,7 +539,7 @@ function App() {
         </motion.div>
 
         <div ref={mainScrollRef} onScroll={handleScroll} className="flex-1 flex flex-col h-screen relative w-full overflow-y-auto scroll-smooth bg-[#020202]">
-           
+            
            <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-30 pointer-events-none">
                 <div className="pointer-events-auto">
                     {!isSidebarOpen && (
@@ -538,17 +556,17 @@ function App() {
 
            {!hasHistory && (
              <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 relative">
-               
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.01] rounded-full blur-[120px] pointer-events-none" />
+                
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.01] rounded-full blur-[120px] pointer-events-none" />
 
-               <motion.div 
-                 initial={{ opacity: 0 }} 
-                 animate={{ opacity: 1 }} 
-                 transition={{ duration: 1.2, ease: "easeOut" }}
-                 className="w-full max-w-3xl flex flex-col items-center text-center z-10"
-               >
-                   <div className="mb-12 flex flex-col items-center">
-                     <motion.h1 
+                <motion.div 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                  className="w-full max-w-3xl flex flex-col items-center text-center z-10"
+                >
+                    <div className="mb-12 flex flex-col items-center">
+                      <motion.h1 
                         initial={{ letterSpacing: "0.1em", opacity: 0, y: 20 }}
                         animate={{ letterSpacing: "0.2em", opacity: 1, y: 0 }}
                         transition={{ duration: 1, ease: "easeOut" }}
@@ -556,24 +574,24 @@ function App() {
                       >
                         ALETHIQ
                       </motion.h1>
-                      
+                       
                       <motion.p 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.5, duration: 1 }}
                         className="text-[10px] md:text-xs text-zinc-600 font-mono tracking-[0.4em] uppercase"
                       >
-                         Intelligence  Search Engine
+                          Intelligence  Search Engine
                       </motion.p>
-                   </div>
+                    </div>
 
-                   <motion.div 
-                     initial={{ opacity: 0, scale: 0.95 }}
-                     animate={{ opacity: 1, scale: 1 }}
-                     transition={{ delay: 0.3, duration: 0.6 }}
-                     className="w-full mb-12"
-                   >
-                     <SearchForm 
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3, duration: 0.6 }}
+                      className="w-full mb-12"
+                    >
+                      <SearchForm 
                         fixed={false} 
                         query={query} 
                         setQuery={setQuery} 
@@ -583,27 +601,27 @@ function App() {
                         hasHistory={hasHistory} 
                         isSidebarOpen={isSidebarOpen} 
                       />
-                   </motion.div>
-                   
-                   <motion.div 
-                     initial={{ opacity: 0 }}
-                     animate={{ opacity: 1 }}
-                     transition={{ delay: 0.8, duration: 1 }}
-                     className="flex flex-wrap justify-center gap-3"
-                   >
-                      {loadingSuggestions ? [...Array(4)].map((_, i) => <div key={i} className="h-6 w-24 bg-white/5 animate-pulse rounded-full" />) : 
-                        suggestions.map((s, i) => (
-                          <button 
-                            key={i} 
-                            onClick={() => handleSearch(s)} 
-                            className="text-[10px] text-zinc-500 hover:text-zinc-300 border border-white/5 hover:border-white/20 px-3 py-1.5 rounded-full transition-all uppercase tracking-wider font-mono hover:bg-white/[0.02]"
-                          > 
-                            {s} 
-                          </button>
-                        ))
-                      }
-                   </motion.div>
-               </motion.div>
+                    </motion.div>
+                    
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8, duration: 1 }}
+                      className="flex flex-wrap justify-center gap-3"
+                    >
+                       {loadingSuggestions ? [...Array(4)].map((_, i) => <div key={i} className="h-6 w-24 bg-white/5 animate-pulse rounded-full" />) : 
+                         suggestions.map((s, i) => (
+                           <button 
+                             key={i} 
+                             onClick={() => handleSearch(s)} 
+                             className="text-[10px] text-zinc-500 hover:text-zinc-300 border border-white/5 hover:border-white/20 px-3 py-1.5 rounded-full transition-all uppercase tracking-wider font-mono hover:bg-white/[0.02]"
+                           > 
+                             {s} 
+                           </button>
+                         ))
+                       }
+                    </motion.div>
+                </motion.div>
              </div>
            )}
 
