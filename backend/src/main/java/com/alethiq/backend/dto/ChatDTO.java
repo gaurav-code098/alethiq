@@ -28,9 +28,8 @@ public class ChatDTO {
 
     // Inside ChatDTO.java
     public record SaveConversationRequest(
-    String username,
-    String query,
-    String answer
+        String query,
+        String answer
     ) {}
 
     
