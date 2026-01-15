@@ -75,7 +75,8 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/health",
                                 "/api/chat/stream",
-                                "/get-suggestions"
+                                "/get-suggestions",
+                                "/api/chat/version"
                         ).permitAll()
                         // 🔒 EVERYTHING ELSE IS LOCKED
                         .anyRequest().authenticated()
