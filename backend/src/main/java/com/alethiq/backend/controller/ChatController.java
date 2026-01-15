@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin(origins = "*") // ✅ Allows Vercel to talk to Render
+
 public class ChatController {
 
     @Autowired
