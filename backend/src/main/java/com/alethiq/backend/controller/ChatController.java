@@ -47,6 +47,12 @@ public class ChatController {
     public ResponseEntity<Chat> getChat(@PathVariable String id) {
         return ResponseEntity.ok(chatService.getChatById(id));
     }
+    // Add this anywhere inside the class
+    @GetMapping("/version")
+    public ResponseEntity<String> checkVersion() {
+    System.out.println("✅ Version Check Hit!");
+    return ResponseEntity.ok("Alethiq Backend v3.0 - Save Active");
+    }
 
     // 🟢 THIS WAS MISSING! (The "Mailbox" for saving chats)
    // ... inside ChatController ...
