@@ -30,8 +30,8 @@ public class AuthController {
     }
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        // Returns the username and email of the logged-in user
-        return ResponseEntity.ok(authService.getUserDetails(authentication.getName()));
+
+        return ResponseEntity.ok(new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
     }
 
 }
