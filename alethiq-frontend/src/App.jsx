@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       const storedToken = tokenFromUrl || localStorage.getItem("alethiq_token");
-       
+        
       if (!storedToken || storedToken === "null") {
         setLoading(false);
         return;
@@ -80,12 +80,20 @@ export const AuthProvider = ({ children }) => {
         const newToken = await res.text();
         localStorage.setItem("alethiq_token", newToken);
         setToken(newToken);
+        
+        // Fetch user profile immediately to get the ID
         const meRes = await fetch(`${API_BASE}/api/auth/me`, {
             headers: { Authorization: `Bearer ${newToken}` }
         });
-        if(meRes.ok) setUser(await meRes.json());
-        else setUser({ username: username, email: email || "" });
-        return { success: true };
+        
+        if(meRes.ok) {
+            setUser(await meRes.json());
+            return { success: true };
+        } else {
+            // 🟢 FIX: If profile load fails, DO NOT set a fake user. Logout instead.
+            logout();
+            return { success: false, message: "Failed to load user profile" };
+        }
       } else { 
         const msg = await res.text();
         alert("Auth failed: " + msg); 
@@ -101,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
   };
-   
+    
   return (
     <AuthContext.Provider value={{ user, token, loginWithEmail, logout, loading, API_BASE }}>
       {!loading && children}
@@ -162,7 +170,7 @@ const AuthCard = ({ onClose }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-   
+    
   const { loginWithEmail, API_BASE } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -181,7 +189,7 @@ const AuthCard = ({ onClose }) => {
         <h1 className="text-2xl font-semibold text-white">{isSignUp ? "Create account" : "Welcome back"}</h1>
         <p className="text-zinc-500 text-sm">{isSignUp ? "Join the Alethiq network" : "Sign in to your account"}</p>
       </div>
-       
+        
       <a 
         href={`${API_BASE}/oauth2/authorization/google`}
         className="w-full flex items-center justify-center gap-3 py-3 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-all mb-4 text-sm"
@@ -242,10 +250,10 @@ const MarkdownComponents = {
 
 const AnswerSection = ({ data, isTyping, status }) => { 
   const [copied, setCopied] = useState(false); 
-   
+    
   const contentParts = useMemo(() => {
     if (!data) return [];
-    
+     
     const parts = data.split(/:::stat-card\s*(\{.*?\})\s*:::/gs);
     const mappedParts = [];
     let cardCount = 0; 
@@ -273,7 +281,7 @@ const AnswerSection = ({ data, isTyping, status }) => {
   }, [data]);
 
   const handleCopy = async () => { await navigator.clipboard.writeText(data.replace(/:::.*?:::/gs, '')); setCopied(true); setTimeout(() => setCopied(false), 2000); }; 
-   
+    
   return ( 
     <div className="relative group/answer"> 
       <div className="flex items-center gap-3 mb-4 md:mb-6 min-h-[24px]"> {isTyping ? ( <> <BrainCircuit className="w-4 h-4 md:w-5 md:h-5 text-teal-400 animate-pulse" /> <span className="text-xs md:text-sm font-mono tracking-widest uppercase text-teal-400/90 animate-pulse">{status || "Processing"}</span> </> ) : <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-zinc-700" />} </div> 
@@ -380,7 +388,7 @@ function App() {
 
   // 🟢 1. NEW: Track last query to save it later
   const [lastQuery, setLastQuery] = useState("");
-   
+    
   const { user, token, API_BASE } = useAuth();
   const { data, sources, images, status, isStreaming, streamData, stopStream } = useStream();
 
@@ -479,12 +487,12 @@ function App() {
   const handleSearch = (searchQuery) => {
     if (!searchQuery?.trim()) return;
     const currentHistory = [...chatHistory];
-    
+     
     setChatHistory(prev => [...prev, { type: 'user', content: searchQuery }]);
     setQuery(""); 
     setLastQuery(searchQuery); // 🟢 3. NEW: Save query to state
     setAutoScroll(true); 
-    
+     
     streamData(searchQuery, "fast", currentHistory);
   };
 
@@ -607,7 +615,7 @@ function App() {
                       >
                         ALETHIQ
                       </motion.h1>
-                       
+                        
                       <motion.p 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
