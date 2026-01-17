@@ -386,13 +386,16 @@ function App() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [suggestions, setSuggestions] = useState([]);
 
-  // 🟢 1. NEW: Track last query to save it later
+  //  1. NEW: Track Thread ID to support continuous chatting
+  const [currentThreadId, setCurrentThreadId] = useState(null);
+  
+  //  2. NEW: Track last query to save it later
   const [lastQuery, setLastQuery] = useState("");
     
   const { user, token, API_BASE } = useAuth();
   const { data, sources, images, status, isStreaming, streamData, stopStream } = useStream();
 
-  // 🟢 URL FOR SUGGESTIONS (Points to Python/Hugging Face directly)
+  //  URL FOR SUGGESTIONS (Points to Python/Hugging Face directly)
   const SUGGESTIONS_URL = "https://gaurav-code098-alethiq.hf.space";
 
   useEffect(() => {
@@ -416,11 +419,11 @@ function App() {
 
   useEffect(() => { fetchHistory(); }, [user, token, API_BASE]);
 
-  // 🟢 2. NEW: Save to History Function
+  // 🟢 3. UPDATED: Save to History Function (Now sends conversationId)
   const saveToHistory = async (userQ, aiA) => {
     if (!token) return;
     try {
-        await fetch(`${API_BASE}/api/chat/save-conversation`, {
+        const res = await fetch(`${API_BASE}/api/chat/save-conversation`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -428,10 +431,19 @@ function App() {
             },
             body: JSON.stringify({
                 query: userQ,
-                answer: aiA
+                answer: aiA,
+                conversationId: currentThreadId // <--- SEND THE ID (if exists)
             })
         });
-        fetchHistory(); // Refresh sidebar
+        
+        if (res.ok) {
+            const data = await res.json();
+            //  CAPTURE THE ID: Next message will use this!
+            if (data.conversationId) {
+                setCurrentThreadId(data.conversationId);
+            }
+            fetchHistory(); // Refresh sidebar
+        }
     } catch (e) {
         console.error("Save failed:", e);
     }
@@ -439,6 +451,8 @@ function App() {
 
   const handleLoadThread = (thread) => {
     setChatHistory([]); 
+    setCurrentThreadId(thread.id); //  RESUME THIS THREAD
+
     const formattedMessages = thread.messages.map(msg => ({
       type: msg.role === "USER" ? "user" : "ai",
       content: msg.content
@@ -447,7 +461,7 @@ function App() {
     if(isMobile) setIsSidebarOpen(false);
   };
 
-  // 🟢 FETCH SUGGESTIONS FROM PYTHON DIRECTLY
+  //  FETCH SUGGESTIONS FROM PYTHON DIRECTLY
   useEffect(() => {
     const fetchSuggestions = async () => {
         try {
@@ -490,17 +504,22 @@ function App() {
      
     setChatHistory(prev => [...prev, { type: 'user', content: searchQuery }]);
     setQuery(""); 
-    setLastQuery(searchQuery); // 🟢 3. NEW: Save query to state
+    setLastQuery(searchQuery); 
     setAutoScroll(true); 
      
     streamData(searchQuery, "fast", currentHistory);
   };
 
-  const handleNewChat = () => { setChatHistory([]); setQuery(""); stopStream(); };
+  const handleNewChat = () => { 
+    setChatHistory([]); 
+    setQuery(""); 
+    setCurrentThreadId(null);
+    stopStream(); 
+  };
 
   const prevStreaming = useRef(false);
   useEffect(() => {
-    // 🟢 4. NEW: Trigger save when stream ends
+    // 🟢 4. Trigger save when stream ends
     if (prevStreaming.current && !isStreaming && data) {
         setChatHistory(prev => [...prev, { type: 'ai', content: data, sources, images }]);
         
