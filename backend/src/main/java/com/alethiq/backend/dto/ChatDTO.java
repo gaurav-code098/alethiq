@@ -30,7 +30,7 @@ public class ChatDTO {
     public record SaveConversationRequest(
         String query,
         String answer,
-        Long conversationId  
+        String conversationId  
     ) {}
     
 }
