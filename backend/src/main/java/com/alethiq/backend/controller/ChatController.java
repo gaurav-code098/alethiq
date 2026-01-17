@@ -65,27 +65,23 @@ public class ChatController {
         return ResponseEntity.ok("Alethiq Backend v3.4 - Threading Clean Build");
     }
 
-    // --- THREADING SAVE LOGIC ---
-    @PostMapping("/save-conversation")
+   @PostMapping("/save-conversation")
     public ResponseEntity<?> saveConversation(@RequestBody ChatDTO.SaveConversationRequest request, Principal principal) {
         if (principal == null) return ResponseEntity.status(403).body("Not logged in");
 
         String username = principal.getName();
         
-        // 1. Fetch User (To get the numeric ID)
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Chat chat = null;
 
-        // 2. LOGIC: Append to existing or Create new?
-        if (request.conversationId() != null) {
-            // Append: Find existing Chat by ID
+    
+        if (request.conversationId() != null && !request.conversationId().isEmpty()) {
             Optional<Chat> existing = chatRepository.findById(request.conversationId());
             if (existing.isPresent()) {
                 Chat foundChat = existing.get();
-                
-                // Security Check: Does this chat belong to this user?
+                // Security Check
                 if (foundChat.getUserId().equals(String.valueOf(user.getId()))) {
                     chat = foundChat;
                 }
@@ -93,30 +89,24 @@ public class ChatController {
         }
 
         if (chat == null) {
-            // Create New Chat
             chat = new Chat();
             chat.setUserId(String.valueOf(user.getId())); 
             chat.setTitle(request.query()); 
             chat.setCreatedAt(LocalDateTime.now());
             chat.setMessages(new ArrayList<>());
             
-            // Save immediately to generate an ID
             chat = chatRepository.save(chat);
         }
 
-        // 3. Add Messages to the Chat's internal list
         if (chat.getMessages() == null) {
             chat.setMessages(new ArrayList<>());
         }
         
-        // Create simple Message objects (POJO)
         chat.getMessages().add(new Message("USER", request.query(), LocalDateTime.now()));
         chat.getMessages().add(new Message("AI", request.answer(), LocalDateTime.now()));
 
-        // 4. Save the Chat (This automatically saves the messages inside it)
         Chat savedChat = chatRepository.save(chat);
 
-        // 5. Return the ID so React can use it for the next message
         return ResponseEntity.ok(Map.of("conversationId", savedChat.getId()));
     }
 
