@@ -1,10 +1,14 @@
 package com.alethiq.backend.controller;
 
-import org.springframework.security.core.Authentication;
 import com.alethiq.backend.dto.ChatDTO;
 import com.alethiq.backend.entity.Chat;
+import com.alethiq.backend.entity.Message;
+import com.alethiq.backend.entity.User;
+import com.alethiq.backend.repository.ChatRepository;
+import com.alethiq.backend.repository.MessageRepository;
+import com.alethiq.backend.repository.UserRepository;
+import com.alethiq.backend.service.AiStreamService;
 import com.alethiq.backend.service.ChatService;
-import com.alethiq.backend.service.AiStreamService; 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -13,11 +17,13 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat")
-
 public class ChatController {
 
     @Autowired
@@ -25,6 +31,16 @@ public class ChatController {
 
     @Autowired
     private AiStreamService aiStreamService;
+
+    // 🟢 NEW: Direct access to Repositories for Threading Logic
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ChatRepository chatRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
 
     // --- CRUD ENDPOINTS ---
 
@@ -47,40 +63,70 @@ public class ChatController {
     public ResponseEntity<Chat> getChat(@PathVariable String id) {
         return ResponseEntity.ok(chatService.getChatById(id));
     }
-    // Add this anywhere inside the class
+
     @GetMapping("/version")
     public ResponseEntity<String> checkVersion() {
-    System.out.println("✅ Version Check Hit!");
-    return ResponseEntity.ok("Alethiq Backend v3.0 - Save Active");
+        System.out.println("✅ Version Check Hit!");
+        return ResponseEntity.ok("Alethiq Backend v3.1 - Threading Active");
     }
 
-    // 🟢 THIS WAS MISSING! (The "Mailbox" for saving chats)
-   // ... inside ChatController ...
-
-    // 🟢 REPLACE THE OLD saveConversation METHOD WITH THIS:
+    // 🟢 THE NEW "SMART" SAVE METHOD (Supports Threading)
     @PostMapping("/save-conversation")
-    public ResponseEntity<?> saveConversation(@RequestBody java.util.Map<String, String> payload, Principal principal) {
-        // 1. Check Auth
+    public ResponseEntity<?> saveConversation(@RequestBody ChatDTO.SaveConversationRequest request, Principal principal) {
         if (principal == null) return ResponseEntity.status(403).body("Not logged in");
-        
+
         String username = principal.getName();
-        System.out.println("📢 RAW SAVE REQUEST RECEIVED from: " + username);
-        System.out.println("📦 Payload: " + payload);
+        
+        // 1. Fetch User
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 2. Extract Data Manually (Safer than DTO for now)
-        String query = payload.get("query");
-        String answer = payload.get("answer");
+        Chat chat;
 
-        if (query == null || answer == null) {
-             System.out.println("❌ Missing query or answer in payload!");
-             return ResponseEntity.badRequest().body("Missing query or answer");
+        // 2. LOGIC: Append to existing or Create new?
+        if (request.conversationId() != null) {
+     
+     
+            chat = chatRepository.findById(String.valueOf(request.conversationId())) 
+                    .orElseThrow(() -> new RuntimeException("Chat not found"));
+
+
+             if (!chat.getUserId().equals(String.valueOf(user.getId()))) {
+                 return ResponseEntity.status(403).body("Unauthorized access to chat");
+             }
+        } else {
+            //  CREATE: Start new Chat
+            chat = new Chat();
+            chat.setUserId(String.valueOf(user.getId())); 
+            chat.setTitle(request.query()); // Set title to the first question
+            chat.setCreatedAt(LocalDateTime.now());
+            chat.setMessages(new ArrayList<>()); // Init list
+            
+            // Save the chat first to generate an ID
+            chat = chatRepository.save(chat);
         }
 
-        // 3. Save
-        Chat savedChat = chatService.saveFullConversation(username, query, answer);
-        System.out.println("✅ SAVED TO DB: " + savedChat.getId());
+        // 3. Create Messages
+        Message userMsg = new Message();
+        userMsg.setRole("USER");
+        userMsg.setContent(request.query());
+        userMsg.setTimestamp(LocalDateTime.now());
+     
+
+        Message aiMsg = new Message();
+        aiMsg.setRole("AI");
+        aiMsg.setContent(request.answer());
+        aiMsg.setTimestamp(LocalDateTime.now());
+
+        chat.getMessages().add(userMsg);
+        chat.getMessages().add(aiMsg);
         
-        return ResponseEntity.ok(savedChat);
+        Chat savedChat = chatRepository.save(chat);
+
+        System.out.println("✅ SAVED THREAD ID: " + savedChat.getId());
+
+     
+        return ResponseEntity.ok(Map.of("conversationId", savedChat.getId()));
     }
 
     // --- STREAMING ENDPOINT ---
@@ -89,7 +135,6 @@ public class ChatController {
     public Flux<String> streamChat(@RequestBody ChatDTO.StreamRequest request, Principal principal) {
         String username = (principal != null) ? principal.getName() : "Anonymous";
         String query = request.query();
-        System.out.println("🔹 Request from: " + username + " | Query: " + query);
         return aiStreamService.streamAnswer(query, username, "fast");
     }
 }
