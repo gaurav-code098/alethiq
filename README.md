@@ -54,7 +54,7 @@ It relies on a distributed microservices architecture, leveraging **Java Spring 
     </td>
   </tr>
 </table>
-<H4>NOTE:- YouTube Intelligence Pipeline is under Maintenance.  </H3>
+
 
 ## 🏗️ Architecture
 
