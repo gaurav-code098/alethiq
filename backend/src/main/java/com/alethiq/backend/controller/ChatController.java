@@ -81,7 +81,7 @@ public class ChatController {
         // 2. LOGIC: Append to existing or Create new?
         if (request.conversationId() != null) {
             // Append: Find existing Chat by ID
-            Optional<Chat> existing = chatRepository.findById(String.valueOf(request.conversationId()));
+            Optional<Chat> existing = chatRepository.findById(request.conversationId());
             if (existing.isPresent()) {
                 Chat foundChat = existing.get();
                 
