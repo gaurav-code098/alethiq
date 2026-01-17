@@ -5,9 +5,7 @@ import com.alethiq.backend.entity.Chat;
 import com.alethiq.backend.entity.Message;
 import com.alethiq.backend.entity.User;
 import com.alethiq.backend.repository.ChatRepository;
-import com.alethiq.backend.repository.UserRepository; /
-
-
+import com.alethiq.backend.repository.UserRepository;
 import com.alethiq.backend.service.AiStreamService;
 import com.alethiq.backend.service.ChatService;
 import jakarta.validation.Valid;
@@ -38,7 +36,7 @@ public class ChatController {
     private ChatRepository chatRepository;
 
     @Autowired
-    private UserRepository userRepository; // ✅ We need this to link new chats to users
+    private UserRepository userRepository;
 
     // --- CRUD ENDPOINTS ---
 
@@ -64,10 +62,10 @@ public class ChatController {
 
     @GetMapping("/version")
     public ResponseEntity<String> checkVersion() {
-        return ResponseEntity.ok("Alethiq Backend v3.3 - Threading Final");
+        return ResponseEntity.ok("Alethiq Backend v3.4 - Threading Clean Build");
     }
 
-    // 🟢 THREADING SAVE LOGIC
+    // --- THREADING SAVE LOGIC ---
     @PostMapping("/save-conversation")
     public ResponseEntity<?> saveConversation(@RequestBody ChatDTO.SaveConversationRequest request, Principal principal) {
         if (principal == null) return ResponseEntity.status(403).body("Not logged in");
@@ -86,8 +84,8 @@ public class ChatController {
             Optional<Chat> existing = chatRepository.findById(String.valueOf(request.conversationId()));
             if (existing.isPresent()) {
                 Chat foundChat = existing.get();
+                
                 // Security Check: Does this chat belong to this user?
-                // Convert Long ID to String for comparison
                 if (foundChat.getUserId().equals(String.valueOf(user.getId()))) {
                     chat = foundChat;
                 }
@@ -97,7 +95,7 @@ public class ChatController {
         if (chat == null) {
             // Create New Chat
             chat = new Chat();
-            chat.setUserId(String.valueOf(user.getId())); // ✅ Correctly link to user
+            chat.setUserId(String.valueOf(user.getId())); 
             chat.setTitle(request.query()); 
             chat.setCreatedAt(LocalDateTime.now());
             chat.setMessages(new ArrayList<>());
@@ -119,8 +117,6 @@ public class ChatController {
         Chat savedChat = chatRepository.save(chat);
 
         // 5. Return the ID so React can use it for the next message
-        // Convert String ID back to Long/String as needed. Frontend expects "conversationId"
-        // If your Chat ID is a String in Java but you sent it as Long, just send it back as is.
         return ResponseEntity.ok(Map.of("conversationId", savedChat.getId()));
     }
 
