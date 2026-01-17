@@ -23,14 +23,14 @@ public class ChatDTO {
 
     public record StreamRequest(
             String query,
-            String mode //
+            String mode 
     ) {}
 
-    // Inside ChatDTO.java
+   
     public record SaveConversationRequest(
         String query,
-        String answer
+        String answer,
+        Long conversationId  
     ) {}
-
     
 }
