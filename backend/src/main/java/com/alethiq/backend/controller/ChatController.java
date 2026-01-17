@@ -5,8 +5,9 @@ import com.alethiq.backend.entity.Chat;
 import com.alethiq.backend.entity.Message;
 import com.alethiq.backend.entity.User;
 import com.alethiq.backend.repository.ChatRepository;
-import com.alethiq.backend.repository.MessageRepository;
-import com.alethiq.backend.repository.UserRepository;
+import com.alethiq.backend.repository.UserRepository; /
+
+
 import com.alethiq.backend.service.AiStreamService;
 import com.alethiq.backend.service.ChatService;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -32,15 +34,11 @@ public class ChatController {
     @Autowired
     private AiStreamService aiStreamService;
 
-    // 🟢 NEW: Direct access to Repositories for Threading Logic
-    @Autowired
-    private UserRepository userRepository;
-
     @Autowired
     private ChatRepository chatRepository;
 
     @Autowired
-    private MessageRepository messageRepository;
+    private UserRepository userRepository; // ✅ We need this to link new chats to users
 
     // --- CRUD ENDPOINTS ---
 
@@ -66,66 +64,63 @@ public class ChatController {
 
     @GetMapping("/version")
     public ResponseEntity<String> checkVersion() {
-        System.out.println("✅ Version Check Hit!");
-        return ResponseEntity.ok("Alethiq Backend v3.1 - Threading Active");
+        return ResponseEntity.ok("Alethiq Backend v3.3 - Threading Final");
     }
 
-    // 🟢 THE NEW "SMART" SAVE METHOD (Supports Threading)
+    // 🟢 THREADING SAVE LOGIC
     @PostMapping("/save-conversation")
     public ResponseEntity<?> saveConversation(@RequestBody ChatDTO.SaveConversationRequest request, Principal principal) {
         if (principal == null) return ResponseEntity.status(403).body("Not logged in");
 
         String username = principal.getName();
         
-        // 1. Fetch User
+        // 1. Fetch User (To get the numeric ID)
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Chat chat;
+        Chat chat = null;
 
         // 2. LOGIC: Append to existing or Create new?
         if (request.conversationId() != null) {
-     
-     
-            chat = chatRepository.findById(String.valueOf(request.conversationId())) 
-                    .orElseThrow(() -> new RuntimeException("Chat not found"));
+            // Append: Find existing Chat by ID
+            Optional<Chat> existing = chatRepository.findById(String.valueOf(request.conversationId()));
+            if (existing.isPresent()) {
+                Chat foundChat = existing.get();
+                // Security Check: Does this chat belong to this user?
+                // Convert Long ID to String for comparison
+                if (foundChat.getUserId().equals(String.valueOf(user.getId()))) {
+                    chat = foundChat;
+                }
+            }
+        }
 
-
-             if (!chat.getUserId().equals(String.valueOf(user.getId()))) {
-                 return ResponseEntity.status(403).body("Unauthorized access to chat");
-             }
-        } else {
-            //  CREATE: Start new Chat
+        if (chat == null) {
+            // Create New Chat
             chat = new Chat();
-            chat.setUserId(String.valueOf(user.getId())); 
-            chat.setTitle(request.query()); // Set title to the first question
+            chat.setUserId(String.valueOf(user.getId())); // ✅ Correctly link to user
+            chat.setTitle(request.query()); 
             chat.setCreatedAt(LocalDateTime.now());
-            chat.setMessages(new ArrayList<>()); // Init list
+            chat.setMessages(new ArrayList<>());
             
-            // Save the chat first to generate an ID
+            // Save immediately to generate an ID
             chat = chatRepository.save(chat);
         }
 
-        // 3. Create Messages
-        Message userMsg = new Message();
-        userMsg.setRole("USER");
-        userMsg.setContent(request.query());
-        userMsg.setTimestamp(LocalDateTime.now());
-     
-
-        Message aiMsg = new Message();
-        aiMsg.setRole("AI");
-        aiMsg.setContent(request.answer());
-        aiMsg.setTimestamp(LocalDateTime.now());
-
-        chat.getMessages().add(userMsg);
-        chat.getMessages().add(aiMsg);
+        // 3. Add Messages to the Chat's internal list
+        if (chat.getMessages() == null) {
+            chat.setMessages(new ArrayList<>());
+        }
         
+        // Create simple Message objects (POJO)
+        chat.getMessages().add(new Message("USER", request.query(), LocalDateTime.now()));
+        chat.getMessages().add(new Message("AI", request.answer(), LocalDateTime.now()));
+
+        // 4. Save the Chat (This automatically saves the messages inside it)
         Chat savedChat = chatRepository.save(chat);
 
-        System.out.println("✅ SAVED THREAD ID: " + savedChat.getId());
-
-     
+        // 5. Return the ID so React can use it for the next message
+        // Convert String ID back to Long/String as needed. Frontend expects "conversationId"
+        // If your Chat ID is a String in Java but you sent it as Long, just send it back as is.
         return ResponseEntity.ok(Map.of("conversationId", savedChat.getId()));
     }
 
@@ -134,7 +129,6 @@ public class ChatController {
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(@RequestBody ChatDTO.StreamRequest request, Principal principal) {
         String username = (principal != null) ? principal.getName() : "Anonymous";
-        String query = request.query();
-        return aiStreamService.streamAnswer(query, username, "fast");
+        return aiStreamService.streamAnswer(request.query(), username, "fast");
     }
 }
