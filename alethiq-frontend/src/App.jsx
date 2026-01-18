@@ -121,6 +121,96 @@ export const useAuth = () => useContext(AuthContext);
 
 // --- HELPER COMPONENTS ---
 
+// 🟢 NEW: SIMPLE SPARKLINE (Zero-Dependency SVG Graph)
+const SimpleSparkline = ({ data, color }) => {
+  if (!data || data.length < 2) return null;
+
+  const width = 300;
+  const height = 60;
+  // Handle both array of numbers OR array of objects {price: number}
+  const values = typeof data[0] === 'object' ? data.map(d => d.price) : data;
+  
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const range = max - min || 1; // Avoid divide by zero
+
+  // Generate SVG Path
+  const points = values.map((price, index) => {
+    const x = (index / (values.length - 1)) * width;
+    const y = height - ((price - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible">
+      <defs>
+        <linearGradient id={`gradient-${color}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={`M0,${height} L${points} L${width},${height} Z`} fill={`url(#gradient-${color})`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+};
+
+// 🟢 NEW: STOCK CARD (Financial Widget)
+const StockCard = ({ data }) => {
+  // Normalize data keys (handle snake_case from python or camelCase)
+  const price = data.price || data.current_price;
+  const symbol = data.symbol || data.entity || "STOCK";
+  const currency = data.currency || "USD";
+  const change = data.change || "0%";
+  const history = data.history || data.graph_points || []; // The data for graph
+  
+  // Determine color based on change string (contains + or -)
+  const isPositive = change.includes('+') || (typeof change === 'number' && change > 0);
+  const color = isPositive ? '#10b981' : '#ef4444'; // Emerald vs Red
+
+  return (
+    <div className="my-6 p-5 bg-[#0e0e0e] rounded-xl border border-white/10 shadow-xl max-w-sm overflow-hidden relative group">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest font-mono">{symbol}</h3>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-2xl font-bold text-white tracking-tight">{currency === 'USD' ? '$' : ''}{price}</span>
+            <span className="text-sm font-medium flex items-center gap-1" style={{ color }}>
+              {isPositive ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+              )}
+              {change}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Graph Area */}
+      {history.length > 0 && (
+        <div className="h-16 w-full mt-2">
+          <SimpleSparkline data={history} color={color} />
+        </div>
+      )}
+      
+      {/* Footer Stats */}
+      <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-white/5">
+         <div>
+            <p className="text-[10px] text-zinc-600 uppercase">Mkt Cap</p>
+            <p className="text-xs text-zinc-300">{data.market_cap || data.marketCap || 'N/A'}</p>
+         </div>
+         <div className="text-right">
+            <p className="text-[10px] text-zinc-600 uppercase">P/E Ratio</p>
+            <p className="text-xs text-zinc-300">{data.pe_ratio || data.peRatio || 'N/A'}</p>
+         </div>
+      </div>
+    </div>
+  );
+};
+
 const HeaderProfile = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -253,7 +343,7 @@ const AnswerSection = ({ data, isTyping, status }) => {
     
   const contentParts = useMemo(() => {
     if (!data) return [];
-     
+      
     const parts = data.split(/:::stat-card\s*(\{.*?\})\s*:::/gs);
     const mappedParts = [];
     let cardCount = 0; 
@@ -270,7 +360,12 @@ const AnswerSection = ({ data, isTyping, status }) => {
                 if (widgetData.Creator === "Google" && widgetData.Valuation === "$1T") return;
 
                 if (cardCount < 1) {
-                    mappedParts.push({ type: 'stat-card', data: widgetData });
+                    // 🟢 CHECK: Is this a Financial Card (has graph data)?
+                    const isFinancial = widgetData.history || widgetData.graph_points;
+                    mappedParts.push({ 
+                        type: isFinancial ? 'stock-card' : 'stat-card', 
+                        data: widgetData 
+                    });
                     cardCount++;
                 }
             } catch (e) {
@@ -294,7 +389,13 @@ const AnswerSection = ({ data, isTyping, status }) => {
                     <div className="my-6 animate-in fade-in slide-in-from-bottom-6 duration-700"> 
                         <StatCard title="Key Insight" data={part.data} /> 
                     </div> 
-                )} 
+                )}
+                {/* 🟢 NEW: RENDER STOCK CARD */}
+                {part.type === 'stock-card' && ( 
+                    <div className="my-6 animate-in fade-in slide-in-from-bottom-6 duration-700"> 
+                        <StockCard data={part.data} /> 
+                    </div> 
+                )}
             </React.Fragment> 
         ))} 
       </div> 
@@ -501,12 +602,12 @@ function App() {
   const handleSearch = (searchQuery) => {
     if (!searchQuery?.trim()) return;
     const currentHistory = [...chatHistory];
-     
+      
     setChatHistory(prev => [...prev, { type: 'user', content: searchQuery }]);
     setQuery(""); 
     setLastQuery(searchQuery); 
     setAutoScroll(true); 
-     
+      
     streamData(searchQuery, "fast", currentHistory);
   };
 
@@ -701,14 +802,14 @@ function App() {
                  <div ref={messagesEndRef} className="h-4" />
                </div>
                <SearchForm 
-                  fixed={true} 
-                  query={query} 
-                  setQuery={setQuery} 
-                  handleSearch={handleSearch} 
-                  isStreaming={isStreaming} 
-                  stopStream={stopStream} 
-                  hasHistory={hasHistory} 
-                  isSidebarOpen={isSidebarOpen} 
+                 fixed={true} 
+                 query={query} 
+                 setQuery={setQuery} 
+                 handleSearch={handleSearch} 
+                 isStreaming={isStreaming} 
+                 stopStream={stopStream} 
+                 hasHistory={hasHistory} 
+                 isSidebarOpen={isSidebarOpen} 
                />
              </div>
            )}
