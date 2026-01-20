@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map; // Import Map
+import java.util.Map; 
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,7 +19,7 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    // 🟢 ADD THIS: We need to talk to the DB to get the ID
+
     @Autowired
     private UserRepository userRepository;
 
@@ -44,8 +44,7 @@ public class AuthController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3. Return the ID, Username, and Email as a JSON Map
-        // This effectively creates: { "id": 1, "username": "...", "email": "..." }
+     
         return ResponseEntity.ok(Map.of(
             "id", user.getId(),
             "username", user.getUsername(),
