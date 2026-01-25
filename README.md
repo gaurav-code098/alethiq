@@ -4,10 +4,7 @@
   <p>
     <strong>A Next-Generation Intelligent Search Engine</strong>
   </p>
-  <br />
 
-  <br />
-  <br />
 
   ![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)
   ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.0-green?style=flat-square&logo=springboot)
