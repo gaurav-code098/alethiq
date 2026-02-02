@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("alethiq_token"));
   const [loading, setLoading] = useState(true);
 
-  // 🔴 JAVA BACKEND (Render)
+  // 🔴 JAVA BACKEND (Render) - Used for Auth, History, and Streaming
   const API_BASE = "https://alethiq.onrender.com";
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("alethiq_token", newToken);
         setToken(newToken);
         
-        // Fetch user profile immediately
+        // Fetch user profile immediately to get the ID
         const meRes = await fetch(`${API_BASE}/api/auth/me`, {
             headers: { Authorization: `Bearer ${newToken}` }
         });
@@ -90,6 +90,7 @@ export const AuthProvider = ({ children }) => {
             setUser(await meRes.json());
             return { success: true };
         } else {
+            // 🟢 FIX: If profile load fails, DO NOT set a fake user. Logout instead.
             logout();
             return { success: false, message: "Failed to load user profile" };
         }
@@ -120,16 +121,20 @@ export const useAuth = () => useContext(AuthContext);
 
 // --- HELPER COMPONENTS ---
 
-// SIMPLE SPARKLINE (Zero-Dependency SVG Graph)
+// 🟢 NEW: SIMPLE SPARKLINE (Zero-Dependency SVG Graph)
 const SimpleSparkline = ({ data, color }) => {
   if (!data || data.length < 2) return null;
+
   const width = 300;
   const height = 60;
+  // Handle both array of numbers OR array of objects {price: number}
   const values = typeof data[0] === 'object' ? data.map(d => d.price) : data;
+  
   const max = Math.max(...values);
   const min = Math.min(...values);
-  const range = max - min || 1; 
+  const range = max - min || 1; // Avoid divide by zero
 
+  // Generate SVG Path
   const points = values.map((price, index) => {
     const x = (index / (values.length - 1)) * width;
     const y = height - ((price - min) / range) * height;
@@ -150,20 +155,23 @@ const SimpleSparkline = ({ data, color }) => {
   );
 };
 
-// STOCK CARD
+// 🟢 NEW: STOCK CARD (Financial Widget)
 const StockCard = ({ data }) => {
+  // Normalize data keys (handle snake_case from python or camelCase)
   const price = data.price || data.current_price;
   const symbol = data.symbol || data.entity || "STOCK";
   const currency = data.currency || "USD";
   const change = data.change || "0%";
-  const history = data.history || data.graph_points || []; 
+  const history = data.history || data.graph_points || []; // The data for graph
   
+  // Determine color based on change string (contains + or -)
   const isPositive = change.includes('+') || (typeof change === 'number' && change > 0);
-  const color = isPositive ? '#10b981' : '#ef4444'; 
+  const color = isPositive ? '#10b981' : '#ef4444'; // Emerald vs Red
 
   return (
     <div className="my-6 p-5 bg-[#0e0e0e] rounded-xl border border-white/10 shadow-xl max-w-sm overflow-hidden relative group">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest font-mono">{symbol}</h3>
@@ -180,11 +188,15 @@ const StockCard = ({ data }) => {
           </div>
         </div>
       </div>
+      
+      {/* Graph Area */}
       {history.length > 0 && (
         <div className="h-16 w-full mt-2">
           <SimpleSparkline data={history} color={color} />
         </div>
       )}
+      
+      {/* Footer Stats */}
       <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-white/5">
          <div>
             <p className="text-[10px] text-zinc-600 uppercase">Mkt Cap</p>
@@ -202,24 +214,38 @@ const StockCard = ({ data }) => {
 const HeaderProfile = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+
   if (!user) return null;
+
   const displayName = user.username.split('_')[0];
 
   return (
     <div className="absolute top-6 right-6 z-50">
-        <button onClick={() => setIsOpen(!isOpen)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-all group shadow-2xl">
+        <button 
+            onClick={() => setIsOpen(!isOpen)}
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-all group shadow-2xl"
+        >
             <div className="w-8 h-8 rounded-full bg-teal-900/30 flex items-center justify-center border border-teal-500/20 text-teal-400 text-sm font-bold shadow-[0_0_15px_rgba(20,184,166,0.15)] group-hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all">
                 {displayName?.[0]?.toUpperCase() || <User size={14}/>}
             </div>
         </button>
+
         <AnimatePresence>
             {isOpen && (
-                <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} className="absolute top-full right-0 mt-3 w-56 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl">
+                <motion.div 
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-3 w-56 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl"
+                >
                     <div className="px-5 py-4 border-b border-white/5">
                         <p className="text-sm text-white font-medium">{displayName}</p>
                         <p className="text-xs text-zinc-500 mt-0.5 truncate">{user.email}</p>
                     </div>
-                    <button onClick={logout} className="w-full flex items-center gap-3 px-5 py-3 text-xs text-red-400/80 hover:text-red-400 hover:bg-red-500/5 transition-colors">
+                    <button 
+                        onClick={logout} 
+                        className="w-full flex items-center gap-3 px-5 py-3 text-xs text-red-400/80 hover:text-red-400 hover:bg-red-500/5 transition-colors"
+                    >
                         <LogOut size={14} /> Sign Out
                     </button>
                 </motion.div>
@@ -234,6 +260,7 @@ const AuthCard = ({ onClose }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+    
   const { loginWithEmail, API_BASE } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -246,13 +273,27 @@ const AuthCard = ({ onClose }) => {
     <div className="w-full max-w-md p-8 bg-[#0a0a0a] border border-white/10 rounded-3xl shadow-2xl relative">
       <button onClick={onClose} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"><X size={20} /></button>
       <div className="flex flex-col items-center gap-2 mb-8 text-center">
+        <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-2">
+          <div className="w-2 h-2 rounded-full bg-white mx-0.5" /><div className="w-2 h-2 rounded-full bg-white mx-0.5" />
+        </div>
         <h1 className="text-2xl font-semibold text-white">{isSignUp ? "Create account" : "Welcome back"}</h1>
         <p className="text-zinc-500 text-sm">{isSignUp ? "Join the Alethiq network" : "Sign in to your account"}</p>
       </div>
-      <a href={`${API_BASE}/oauth2/authorization/google`} className="w-full flex items-center justify-center gap-3 py-3 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-all mb-4 text-sm">
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="G" /> Continue with Google
+        
+      <a 
+        href={`${API_BASE}/oauth2/authorization/google`}
+        className="w-full flex items-center justify-center gap-3 py-3 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-all mb-4 text-sm"
+      >
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="G" />
+        Continue with Google
       </a>
-      <div className="flex items-center gap-4 mb-4 w-full"> <div className="h-px bg-white/10 flex-1" /> <span className="text-xs text-zinc-600 uppercase">Or with email</span> <div className="h-px bg-white/10 flex-1" /> </div>
+
+      <div className="flex items-center gap-4 mb-4 w-full">
+          <div className="h-px bg-white/10 flex-1" />
+          <span className="text-xs text-zinc-600 uppercase">Or with email</span>
+          <div className="h-px bg-white/10 flex-1" />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="text" placeholder={isSignUp ? "Username" : "Username or Email"} required className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-teal-500/50 transition-all" onChange={(e) => setUsername(e.target.value)} />
         {isSignUp && <input type="email" placeholder="Email Address" required className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-teal-500/50 transition-all" onChange={(e) => setEmail(e.target.value)} />}
@@ -281,20 +322,21 @@ const SourcesGrid = ({ sources }) => {
   ); 
 };
 
+// 🟢 FIX: Added break-words and whitespace control to all text components
 const MarkdownComponents = { 
   h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl font-normal text-white mt-8 mb-4 tracking-tight font-display" {...props} />, 
   h2: ({node, ...props}) => <h2 className="text-lg md:text-xl font-normal text-zinc-200 mt-6 mb-3 tracking-wide flex items-center gap-2" {...props}><div className="w-1 h-5 bg-teal-500/50 rounded-full" />{props.children}</h2>, 
   p: ({node, children, ...props}) => <p className="text-zinc-300 leading-7 mb-4 text-[15px] md:text-[16px] font-normal tracking-wide break-words whitespace-pre-wrap" {...props}>{children}</p>, 
   a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors" {...props} />, 
-  ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-2" {...props} />, 
-  li: ({node, ...props}) => <li className="flex gap-3 items-start"><span className="mt-2 w-1.5 h-1.5 rounded-full bg-teal-500/50 flex-shrink-0" /><span className="flex-1 leading-7">{props.children}</span></li>, 
+  ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-2 break-words" {...props} />, 
+  li: ({node, ...props}) => <li className="flex gap-3 items-start"><span className="mt-2 w-1.5 h-1.5 rounded-full bg-teal-500/50 flex-shrink-0" /><span className="flex-1 leading-7 break-words">{props.children}</span></li>, 
   table: ({node, ...props}) => ( <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#0c0c0e] shadow-lg"> <div className="overflow-x-auto"><table className="w-full text-left text-sm" {...props} /></div> </div> ), 
   thead: ({node, ...props}) => <thead className="bg-white/[0.02] border-b border-white/5 text-zinc-400 font-medium" {...props} />, 
   tbody: ({node, ...props}) => <tbody className="divide-y divide-white/5" {...props} />, 
   th: ({node, ...props}) => <th className="px-4 py-3 text-[10px] uppercase tracking-wider font-semibold whitespace-nowrap" {...props} />, 
   tr: ({node, ...props}) => <tr className="group hover:bg-white/[0.02] transition-colors" {...props} />, 
   td: ({node, ...props}) => <td className="px-4 py-3 text-zinc-300 font-light" {...props} />, 
-  code: ({node, inline, className, children, ...props}) => { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? ( <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-2xl bg-[#1e1e1e] text-sm md:text-base"> <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={true} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter> </div> ) : <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5" {...props}>{children}</code>; } 
+  code: ({node, inline, className, children, ...props}) => { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? ( <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-2xl bg-[#1e1e1e] text-sm md:text-base w-full max-w-full overflow-x-auto"> <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={false} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter> </div> ) : <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5 break-all" {...props}>{children}</code>; } 
 };
 
 const AnswerSection = ({ data, isTyping, status }) => { 
@@ -319,6 +361,7 @@ const AnswerSection = ({ data, isTyping, status }) => {
                 if (widgetData.Creator === "Google" && widgetData.Valuation === "$1T") return;
 
                 if (cardCount < 1) {
+                    // 🟢 CHECK: Is this a Financial Card (has graph data)?
                     const isFinancial = widgetData.history || widgetData.graph_points;
                     mappedParts.push({ 
                         type: isFinancial ? 'stock-card' : 'stat-card', 
@@ -348,6 +391,7 @@ const AnswerSection = ({ data, isTyping, status }) => {
                         <StatCard title="Key Insight" data={part.data} /> 
                     </div> 
                 )}
+                {/* 🟢 RENDER STOCK CARD */}
                 {part.type === 'stock-card' && ( 
                     <div className="my-6 animate-in fade-in slide-in-from-bottom-6 duration-700"> 
                         <StockCard data={part.data} /> 
@@ -793,7 +837,7 @@ function App() {
                  {chatHistory.map((msg, idx) => (
                    <div key={idx} className="group">
                        {msg.type === 'user' ? (
-                         <h2 className="text-2xl md:text-4xl font-light text-white/90 tracking-tight mb-8 leading-snug">{msg.content}</h2>
+                         <h2 className="text-2xl md:text-4xl font-light text-white/90 tracking-tight mb-8 leading-snug break-words">{msg.content}</h2>
                        ) : (
                          <ContentBlock data={msg.content} sources={msg.sources} images={msg.images} isTyping={false} onRelatedClick={handleSearch} />
                        )}
