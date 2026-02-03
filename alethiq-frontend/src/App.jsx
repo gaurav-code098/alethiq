@@ -40,22 +40,13 @@ const GlobalStyles = () => (
 // --- 1. VISUAL: DARK AURORA BACKGROUND (50% Dimmer) ---
 const AlethiqBackground = () => {
   return (
-    // 🟢 Base: Deep Black/Zinc
     <div className="fixed inset-0 w-full h-full -z-50 bg-[#09090b] overflow-hidden">
-      
-      {/* 🟢 TOP RIGHT: Teal Light (Reduced Opacity to 0.3) */}
       <div className="absolute top-[-10%] right-[-10%] w-[1000px] h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[100px] animate-pulse" 
            style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.5) 0%, rgba(0,0,0,0) 70%)" }} />
-      
-      {/* 🟢 BOTTOM LEFT: Emerald Light (Reduced Opacity to 0.25) */}
       <div className="absolute bottom-[-10%] left-[-10%] w-[800px] h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[100px]" 
            style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
-      
-      {/* 🟢 CENTER: Ambient Fill (Reduced Opacity to 0.1) */}
       <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[1200px] h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[120px]" 
            style={{ background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0) 70%)" }} />
-           
-      {/* Noise Overlay */}
       <div className="absolute inset-0 opacity-[0.06] pointer-events-none mix-blend-overlay" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
     </div>
@@ -144,6 +135,7 @@ const Persona = () => {
     </div>
   );
 };
+
 
 // --- AUTH CONTEXT ---
 const AuthContext = createContext();
@@ -268,17 +260,17 @@ const AuthCard = ({ onClose }) => {
   );
 };
 
-// 🟢 MARKDOWN COMPONENTS (With Comparison Table Support)
+// 🟢 MARKDOWN COMPONENTS
 const MarkdownComponents = { 
-  h1: ({node, ...props}) => <h1 className="text-3xl md:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
-  h2: ({node, ...props}) => <h2 className="text-xl md:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
-  h3: ({node, ...props}) => <h3 className="text-lg md:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
-  p: ({node, children, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4 text-[16px] font-display whitespace-pre-wrap break-words">{children}</p>, 
+  h1: ({node, ...props}) => <h1 className="text-2xl md:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
+  h2: ({node, ...props}) => <h2 className="text-lg md:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
+  h3: ({node, ...props}) => <h3 className="text-base md:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
+  p: ({node, children, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4 text-[15px] md:text-[16px] font-display whitespace-pre-wrap break-words">{children}</p>, 
   a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors" {...props} />, 
   ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-4 list-disc marker:text-teal-500 break-words" {...props} />, 
   li: ({node, ...props}) => <li className="pl-1 leading-relaxed break-words">{props.children}</li>, 
   
-  // 🟢 TABLE STYLING
+  // Table Styling
   table: ({node, ...props}) => (
     <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md">
       <div className="overflow-x-auto">
@@ -295,7 +287,7 @@ const MarkdownComponents = {
   code: ({node, inline, className, children, ...props}) => { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? ( <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-lg bg-[#1e1e1e] text-sm md:text-base w-full max-w-full overflow-x-auto"> <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={false} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter> </div> ) : <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5 break-all" {...props}>{children}</code>; } 
 };
 
-// 🟢 SOURCES GRID (Static Top)
+// 🟢 SOURCES GRID (Mobile-friendly: Horizontal Scroll)
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
@@ -315,7 +307,7 @@ const SourcesGrid = ({ sources }) => {
   ); 
 };
 
-// 🟢 CONTENT BLOCK (5 Related Questions)
+// 🟢 CONTENT BLOCK
 const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick }) => { 
   const [cleanAnswer, relatedQuestions] = useMemo(() => { if (!data) return ["", []]; const parts = data.split("|||"); return [parts[0], parts.slice(1).map(q => q.trim()).filter(q => q.length > 5)]; }, [data]); 
   const displayData = isTyping ? useTypewriter(cleanAnswer, 0.5) : cleanAnswer; 
@@ -340,10 +332,8 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
   return (
     <div className="w-full max-w-[900px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
       
-      {/* 1. SOURCES */}
       {sources && sources.length > 0 && <SourcesGrid sources={sources} />}
 
-      {/* 2. MAIN ANSWER */}
       <div className="flex flex-col gap-6 px-2">
         {isTyping && (
             <div className="flex items-center gap-2 mb-2 text-xs font-medium text-teal-400 uppercase tracking-wider">
@@ -434,7 +424,8 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                 <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-[#09090b] via-[#09090b]/95 to-transparent pointer-events-none"></div>
             )}
 
-            <div className={`relative w-full pointer-events-auto ${fixed ? 'max-w-3xl px-4 pb-8' : 'max-w-2xl'}`}>
+            {/* Mobile Optimization: max-w-full and px-4 */}
+            <div className={`relative w-full pointer-events-auto ${fixed ? 'max-w-3xl px-4 pb-8' : 'max-w-2xl px-4'}`}>
                 
                 {selectedImages.length > 0 && (
                     <div className="flex gap-2 mb-2 overflow-x-auto w-full px-1 scrollbar-hide">
@@ -449,7 +440,7 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
 
                 <div className={`relative flex flex-col bg-white dark:bg-[#121212] rounded-2xl border border-gray-200 dark:border-white/10 shadow-xl dark:shadow-black/50 overflow-hidden transition-all duration-300 group-focus-within:shadow-[0_0_20px_rgba(20,184,166,0.15)] focus-within:border-teal-500/50 ${fixed ? 'bg-opacity-90 backdrop-blur-xl' : ''}`}>
                     
-                    <div className="flex items-start p-4">
+                    <div className="flex items-start p-3 md:p-4">
                         {fixed && (
                             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 mr-3 mt-1 flex-shrink-0">
                                 <Plus size={18} className="text-zinc-500" />
@@ -458,7 +449,8 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                         <textarea 
                             ref={textareaRef}
                             rows={1}
-                            className={`w-full bg-transparent border-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 resize-none py-2 leading-relaxed outline-none font-display ${fixed ? 'text-[15px]' : 'text-lg'}`}
+                            // 🟢 Mobile Font Size Fix: text-[16px] to prevent IOS zoom
+                            className={`w-full bg-transparent border-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 resize-none py-2 leading-relaxed outline-none font-display ${fixed ? 'text-base' : 'text-lg'}`}
                             placeholder={fixed ? "Ask a follow-up question..." : "What do you want to discover today?"}
                             value={query} 
                             onChange={handleInput} 
@@ -468,7 +460,7 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                         />
                     </div>
 
-                    <div className="flex items-center justify-between px-4 pb-3 pt-1">
+                    <div className="flex items-center justify-between px-3 md:px-4 pb-3 pt-1">
                         <div className="flex items-center gap-2">
                             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" multiple />
                             <button type="button" onClick={() => fileInputRef.current.click()} className="p-1.5 rounded-lg text-gray-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors">
@@ -567,8 +559,16 @@ function App() {
       <AlethiqBackground />
       <AnimatePresence>{showAuthModal && (<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-lg p-4"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}><AuthCard onClose={() => setShowAuthModal(false)} /></motion.div></div>)}</AnimatePresence>
       
+      {/* 🟢 MOBILE SIDEBAR OVERLAY */}
+      {isMobile && isSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       <div className="relative w-full h-full flex">
-        {/* Sidebar - Transparent Glass */}
+        {/* Sidebar */}
         <motion.div animate={{ width: isSidebarOpen ? 260 : 0, opacity: isSidebarOpen ? 1 : 0 }} className={`fixed md:relative top-0 left-0 h-screen bg-black/20 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col overflow-hidden`}>
              <div className="w-[260px] flex flex-col h-full p-4">
                 <div className="flex justify-between items-center mb-10 px-2 mt-2">
@@ -620,13 +620,13 @@ function App() {
 
                  {/* 🅱️ RESULT VIEW */}
                  {hasHistory && (
-                   // 🟢 REDUCED PADDING to pb-64
+                   // 🟢 PADDING to pb-64
                    <div className="w-full max-w-5xl mx-auto pt-24 pb-64 px-4 sm:px-6 lg:px-8">
                       {chatHistory.map((msg, idx) => (
                          <div key={idx} className="group mb-16 border-b border-white/5 pb-16 last:border-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                              {msg.type === 'user' ? (
                                <div className="w-full max-w-[900px] mx-auto mb-10">
-                                  <h2 className="text-3xl md:text-4xl font-serif text-white tracking-tight leading-tight">{msg.content}</h2>
+                                  <h2 className="text-2xl md:text-4xl font-serif text-white tracking-tight leading-tight">{msg.content}</h2>
                                </div>
                              ) : (
                                <ContentBlock data={msg.content} sources={msg.sources} images={msg.images} isTyping={false} onRelatedClick={handleSearch} />
