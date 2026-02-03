@@ -257,20 +257,32 @@ const AuthCard = ({ onClose }) => {
   );
 };
 
+// 🟢 MARKDOWN COMPONENTS (Responsive Text & Forced Wrapping)
 const MarkdownComponents = { 
   h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
   h2: ({node, ...props}) => <h2 className="text-lg md:text-xl lg:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-5 md:h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
   h3: ({node, ...props}) => <h3 className="text-base md:text-lg lg:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
-  p: ({node, children, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4 text-[15px] md:text-[16px] font-display whitespace-pre-wrap break-words">{children}</p>, 
-  a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors" {...props} />, 
+  // 🟢 Fixed Paragraphs: break-words & w-full prevents overflow
+  p: ({node, children, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4 text-[15px] md:text-[16px] font-display break-words w-full" {...props}>{children}</p>, 
+  a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors break-all" {...props} />, 
   ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-4 list-disc marker:text-teal-500 break-words" {...props} />, 
   li: ({node, ...props}) => <li className="pl-1 leading-relaxed break-words">{props.children}</li>, 
-  table: ({node, ...props}) => ( <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md"> <div className="overflow-x-auto"><table className="w-full text-left text-sm" {...props} /></div> </div> ), 
+  
+  // 🟢 Table Styling: Wrapper with overflow-x-auto handles tables on mobile
+  table: ({node, ...props}) => (
+    <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm" {...props} />
+      </div>
+    </div>
+  ),
   thead: ({node, ...props}) => <thead className="bg-white/[0.03] border-b border-white/10 text-zinc-400 font-semibold" {...props} />, 
   tbody: ({node, ...props}) => <tbody className="divide-y divide-white/5" {...props} />, 
   th: ({node, ...props}) => <th className="px-4 py-3 text-[11px] uppercase tracking-wider whitespace-nowrap text-teal-500/80" {...props} />, 
   tr: ({node, ...props}) => <tr className="group hover:bg-white/[0.02] transition-colors" {...props} />, 
   td: ({node, ...props}) => <td className="px-4 py-3 text-zinc-300 font-light border-r border-white/5 last:border-r-0" {...props} />, 
+
+  // 🟢 Code Block: max-w-full + overflow-x-auto keeps code inside screen
   code: ({node, inline, className, children, ...props}) => { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? ( <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-lg bg-[#1e1e1e] text-sm md:text-base w-full max-w-full overflow-x-auto"> <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={false} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter> </div> ) : <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5 break-all" {...props}>{children}</code>; } 
 };
 
@@ -278,6 +290,7 @@ const MarkdownComponents = {
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
+    // Negative margin on mobile (-mx-4) to bleed to screen edge
     <div className="z-20 border-b border-white/5 py-3 md:py-4 mb-6 -mx-4 px-4 sm:px-6 lg:px-8">
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
         {sources.map((source, idx) => ( 
@@ -294,7 +307,7 @@ const SourcesGrid = ({ sources }) => {
   ); 
 };
 
-// 🟢 CONTENT BLOCK (5 Related Questions)
+// 🟢 CONTENT BLOCK
 const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick }) => { 
   const [cleanAnswer, relatedQuestions] = useMemo(() => { if (!data) return ["", []]; const parts = data.split("|||"); return [parts[0], parts.slice(1).map(q => q.trim()).filter(q => q.length > 5)]; }, [data]); 
   const displayData = isTyping ? useTypewriter(cleanAnswer, 0.5) : cleanAnswer; 
@@ -317,13 +330,14 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
   }, [displayData]);
 
   return (
-    <div className="w-full max-w-[900px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
+    // 🟢 Added max-w-full and overflow-hidden to main wrapper to prevent horizontal scroll
+    <div className="w-full max-w-[900px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 relative max-w-full overflow-hidden">
       
       {/* 1. SOURCES */}
       {sources && sources.length > 0 && <SourcesGrid sources={sources} />}
 
       {/* 2. MAIN ANSWER */}
-      <div className="flex flex-col gap-4 md:gap-6 px-1 md:px-2">
+      <div className="flex flex-col gap-4 md:gap-6 px-1 md:px-2 min-w-0">
         {isTyping && (
             <div className="flex items-center gap-2 mb-2 text-xs font-medium text-teal-400 uppercase tracking-wider">
                 <span className="animate-pulse">{status || "Thinking"}</span>
@@ -331,7 +345,8 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
             </div>
         )}
 
-        <div className="prose prose-lg prose-zinc dark:prose-invert max-w-none">
+        {/* 🟢 Force prose to break words and not overflow */}
+        <div className="prose prose-lg prose-zinc dark:prose-invert max-w-none break-words w-full">
             {contentParts.map((part, idx) => (
                 <React.Fragment key={idx}>
                     {part.type === 'text' && <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{part.content}</ReactMarkdown>}
@@ -343,7 +358,7 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
 
         {!isTyping && images && images.length > 0 && <ImageGrid images={images} />}
 
-        {/* 3. RELATED QUESTIONS (Limit 5) */}
+        {/* 3. RELATED QUESTIONS */}
         {!isTyping && relatedQuestions.length > 0 && (
             <div className="mt-8 md:mt-10 pt-6 border-t border-white/5">
                 <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Layers size={12}/> Explore Further</h4>
