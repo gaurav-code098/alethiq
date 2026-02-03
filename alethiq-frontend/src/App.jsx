@@ -26,7 +26,7 @@ const GlobalStyles = () => (
     .font-display { font-family: 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     
-    /* Custom Scrollbar - Hidden on mobile for cleaner look */
+    /* Scrollbar */
     @media (min-width: 768px) {
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -37,28 +37,22 @@ const GlobalStyles = () => (
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Prevent image overflow in markdown */
-    .prose img { max-width: 100%; height: auto; border-radius: 0.75rem; }
+    /* Mobile Touch Fixes */
+    input, textarea, button, select, a { -webkit-tap-highlight-color: transparent; }
   `}</style>
 );
 
-// --- 1. VISUAL: DARK AURORA BACKGROUND (Mobile Optimized) ---
+// --- 1. VISUAL: DARK AURORA BACKGROUND ---
 const AlethiqBackground = () => {
   return (
     <div className="fixed inset-0 w-full h-full -z-50 bg-[#09090b] overflow-hidden pointer-events-none">
-      {/* 🟢 TOP RIGHT: Scaled down for mobile to prevent overwhelming the screen */}
       <div className="absolute top-[-5%] right-[-10%] w-[300px] md:w-[1000px] h-[300px] md:h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[60px] md:blur-[100px] animate-pulse" 
            style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.5) 0%, rgba(0,0,0,0) 70%)" }} />
-      
-      {/* 🟢 BOTTOM LEFT */}
       <div className="absolute bottom-[-5%] left-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[60px] md:blur-[100px]" 
            style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
-      
-      {/* 🟢 CENTER */}
       <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-[100%] md:w-[1200px] h-[400px] md:h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[80px] md:blur-[120px]" 
            style={{ background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0) 70%)" }} />
-           
-      <div className="absolute inset-0 opacity-[0.06] pointer-events-none mix-blend-overlay" 
+      <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
     </div>
   );
@@ -71,30 +65,21 @@ const Conversation = ({ children, className }) => {
 
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTo({
-        top: containerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
+      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, []);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
-      const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 150;
-      setShowScrollButton(isNotAtBottom);
+      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 150);
     };
-
     container.addEventListener('scroll', handleScroll);
     if (container.scrollHeight > container.clientHeight) {
-         // Auto-scroll logic: only if near bottom
         const { scrollTop, scrollHeight, clientHeight } = container;
-        if (scrollHeight - scrollTop - clientHeight < 200) {
-             scrollToBottom();
-        }
+        if (scrollHeight - scrollTop - clientHeight < 200) scrollToBottom();
     }
     return () => container.removeEventListener('scroll', handleScroll);
   }, [children, scrollToBottom]);
@@ -113,7 +98,6 @@ const Conversation = ({ children, className }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             onClick={scrollToBottom}
-            // 🟢 Repositioned for mobile: higher up so it doesn't overlap search bar
             className="absolute bottom-36 md:bottom-40 left-1/2 -translate-x-1/2 z-30 p-2.5 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
           >
             <ArrowDown size={20} />
@@ -137,8 +121,6 @@ const Persona = () => {
         <span className="text-sm font-light text-gray-200 tracking-wide">How can I help you today?</span>
         <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#121212] border-b border-r border-white/10 transform rotate-45"></div>
       </motion.div>
-
-      {/* 🟢 Flashy Floating Orb */}
       <div className="relative group">
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[80%] h-[80%] bg-teal-500/20 rounded-full blur-[40px] opacity-60 group-hover:opacity-80 transition-opacity duration-1000" />
         <div className="relative w-24 h-24 rounded-full bg-gradient-to-b from-[#1a1a1a] to-black border border-white/10 flex items-center justify-center overflow-hidden transition-transform duration-700 ease-out group-hover:scale-105 shadow-[0_0_50px_-10px_rgba(20,184,166,0.3)]">
@@ -225,7 +207,6 @@ const StockCard = ({ data }) => {
   const isPositive = change.includes('+') || (typeof change === 'number' && change > 0);
   const color = isPositive ? '#10b981' : '#ef4444'; 
   return (
-    // 🟢 Mobile: Full width to prevent squash
     <div className="my-4 md:my-6 p-4 md:p-5 bg-[#121212] rounded-xl border border-white/5 shadow-sm w-full md:max-w-sm overflow-hidden relative group">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="flex justify-between items-start mb-4">
@@ -277,7 +258,6 @@ const AuthCard = ({ onClose }) => {
 };
 
 const MarkdownComponents = { 
-  // 🟢 Responsive Font Sizes
   h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
   h2: ({node, ...props}) => <h2 className="text-lg md:text-xl lg:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-5 md:h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
   h3: ({node, ...props}) => <h3 className="text-base md:text-lg lg:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
@@ -285,21 +265,12 @@ const MarkdownComponents = {
   a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors" {...props} />, 
   ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-4 list-disc marker:text-teal-500 break-words" {...props} />, 
   li: ({node, ...props}) => <li className="pl-1 leading-relaxed break-words">{props.children}</li>, 
-  
-  // 🟢 Mobile Friendly Table Wrapper
-  table: ({node, ...props}) => (
-    <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm" {...props} />
-      </div>
-    </div>
-  ),
+  table: ({node, ...props}) => ( <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md"> <div className="overflow-x-auto"><table className="w-full text-left text-sm" {...props} /></div> </div> ), 
   thead: ({node, ...props}) => <thead className="bg-white/[0.03] border-b border-white/10 text-zinc-400 font-semibold" {...props} />, 
   tbody: ({node, ...props}) => <tbody className="divide-y divide-white/5" {...props} />, 
   th: ({node, ...props}) => <th className="px-4 py-3 text-[11px] uppercase tracking-wider whitespace-nowrap text-teal-500/80" {...props} />, 
   tr: ({node, ...props}) => <tr className="group hover:bg-white/[0.02] transition-colors" {...props} />, 
   td: ({node, ...props}) => <td className="px-4 py-3 text-zinc-300 font-light border-r border-white/5 last:border-r-0" {...props} />, 
-
   code: ({node, inline, className, children, ...props}) => { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? ( <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-lg bg-[#1e1e1e] text-sm md:text-base w-full max-w-full overflow-x-auto"> <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={false} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter> </div> ) : <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5 break-all" {...props}>{children}</code>; } 
 };
 
@@ -307,11 +278,10 @@ const MarkdownComponents = {
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
-    // Negative margin on mobile (-mx-4) to bleed to screen edge
     <div className="z-20 border-b border-white/5 py-3 md:py-4 mb-6 -mx-4 px-4 sm:px-6 lg:px-8">
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
         {sources.map((source, idx) => ( 
-          <a key={idx} href={source.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-60 md:w-64 group flex flex-col justify-between p-3 h-24 bg-[#121212] hover:bg-[#1a1a1a] border border-white/10 hover:border-teal-500/30 rounded-xl transition-all shadow-sm overflow-hidden cursor-pointer"> 
+          <a key={idx} href={source.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-60 md:w-64 group flex flex-col justify-between p-3 h-24 bg-[#121212] hover:bg-[#1a1a1a] border border-white/10 hover:border-teal-500/30 rounded-xl transition-all shadow-sm overflow-hidden cursor-pointer active:scale-95 md:active:scale-100"> 
             <div className="flex justify-between items-start"> 
               <div className="text-[10px] font-mono text-zinc-500 truncate max-w-[80%] uppercase tracking-wider group-hover:text-teal-400 transition-colors"> {new URL(source.url).hostname.replace('www.', '')} </div> 
               <div className="p-1 rounded-full bg-white/5 group-hover:bg-teal-500/10 transition-colors"> <img src={`https://www.google.com/s2/favicons?domain=${source.url}`} alt="" className="w-3 h-3 grayscale group-hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} /> </div> 
@@ -324,7 +294,7 @@ const SourcesGrid = ({ sources }) => {
   ); 
 };
 
-// 🟢 CONTENT BLOCK
+// 🟢 CONTENT BLOCK (5 Related Questions)
 const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick }) => { 
   const [cleanAnswer, relatedQuestions] = useMemo(() => { if (!data) return ["", []]; const parts = data.split("|||"); return [parts[0], parts.slice(1).map(q => q.trim()).filter(q => q.length > 5)]; }, [data]); 
   const displayData = isTyping ? useTypewriter(cleanAnswer, 0.5) : cleanAnswer; 
@@ -373,7 +343,7 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
 
         {!isTyping && images && images.length > 0 && <ImageGrid images={images} />}
 
-        {/* 3. RELATED QUESTIONS */}
+        {/* 3. RELATED QUESTIONS (Limit 5) */}
         {!isTyping && relatedQuestions.length > 0 && (
             <div className="mt-8 md:mt-10 pt-6 border-t border-white/5">
                 <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Layers size={12}/> Explore Further</h4>
@@ -443,7 +413,6 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                 <div className="absolute bottom-0 inset-x-0 h-32 md:h-40 bg-gradient-to-t from-[#09090b] via-[#09090b]/95 to-transparent pointer-events-none"></div>
             )}
 
-            {/* 🟢 Mobile Optimization: max-w-full and px-4 */}
             <div className={`relative w-full pointer-events-auto ${fixed ? 'max-w-3xl px-4 pb-6 md:pb-8' : 'max-w-2xl px-4'}`}>
                 
                 {selectedImages.length > 0 && (
