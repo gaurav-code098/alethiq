@@ -26,7 +26,7 @@ const GlobalStyles = () => (
     .font-display { font-family: 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     
-    /* Scrollbar */
+    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -42,15 +42,15 @@ const AlethiqBackground = () => {
   return (
     <div className="fixed inset-0 w-full h-full -z-50 bg-[#09090b] overflow-hidden">
       {/* 🟢 TOP RIGHT */}
-      <div className="absolute top-[-10%] right-[-10%] w-[600px] md:w-[1000px] h-[600px] md:h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[80px] md:blur-[100px] animate-pulse" 
+      <div className="absolute top-[-10%] right-[-10%] w-[250px] md:w-[1000px] h-[250px] md:h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[60px] md:blur-[100px] animate-pulse" 
            style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.5) 0%, rgba(0,0,0,0) 70%)" }} />
       
       {/* 🟢 BOTTOM LEFT */}
-      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] md:w-[800px] h-[500px] md:h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[80px] md:blur-[100px]" 
+      <div className="absolute bottom-[-10%] left-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[60px] md:blur-[100px]" 
            style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
       
       {/* 🟢 CENTER */}
-      <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[800px] md:w-[1200px] h-[500px] md:h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[100px] md:blur-[120px]" 
+      <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[400px] md:w-[1200px] h-[400px] md:h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[80px] md:blur-[120px]" 
            style={{ background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0) 70%)" }} />
            
       <div className="absolute inset-0 opacity-[0.06] pointer-events-none mix-blend-overlay" 
@@ -76,11 +76,13 @@ const Conversation = ({ children, className }) => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
       const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 100;
       setShowScrollButton(isNotAtBottom);
     };
+
     container.addEventListener('scroll', handleScroll);
     if (container.scrollHeight > container.clientHeight) {
         const { scrollTop, scrollHeight, clientHeight } = container;
@@ -103,7 +105,7 @@ const Conversation = ({ children, className }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             onClick={scrollToBottom}
-            className="absolute bottom-32 md:bottom-36 left-1/2 -translate-x-1/2 z-40 p-2 bg-[#1a1a1a] border border-white/10 rounded-full shadow-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+            className="absolute bottom-32 md:bottom-36 left-1/2 -translate-x-1/2 z-40 p-2.5 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
           >
             <ArrowDown size={20} />
           </motion.button>
@@ -113,10 +115,10 @@ const Conversation = ({ children, className }) => {
   );
 };
 
-// --- 3. PERSONA COMPONENT (Responsive) ---
+// --- 3. PERSONA COMPONENT ---
 const Persona = () => {
   return (
-    <div className="flex flex-col items-center justify-center mb-10 w-full px-4">
+    <div className="flex flex-col items-center justify-center mb-8 md:mb-10 w-full px-4">
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -188,7 +190,7 @@ export const AuthProvider = ({ children }) => {
 };
 export const useAuth = () => useContext(AuthContext);
 
-// --- HELPER COMPONENTS (Responsive) ---
+// --- HELPER COMPONENTS ---
 const SimpleSparkline = ({ data, color }) => {
   if (!data || data.length < 2) return null;
   const width = 300; const height = 60;
@@ -204,7 +206,6 @@ const SimpleSparkline = ({ data, color }) => {
   );
 };
 
-// 🟢 Responsive Stock Card: w-full max-w-sm to avoid overflow
 const StockCard = ({ data }) => {
   const price = data.price || data.current_price;
   const symbol = data.symbol || data.entity || "STOCK";
@@ -214,7 +215,7 @@ const StockCard = ({ data }) => {
   const isPositive = change.includes('+') || (typeof change === 'number' && change > 0);
   const color = isPositive ? '#10b981' : '#ef4444'; 
   return (
-    <div className="my-6 p-5 bg-[#121212] rounded-xl border border-white/5 shadow-sm w-full max-w-sm overflow-hidden relative group">
+    <div className="my-4 md:my-6 p-4 md:p-5 bg-[#121212] rounded-xl border border-white/5 shadow-sm w-full max-w-sm overflow-hidden relative group">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="flex justify-between items-start mb-4">
         <div><h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest font-mono">{symbol}</h3><div className="flex items-baseline gap-2 mt-1"><span className="text-2xl font-bold text-white tracking-tight">{currency === 'USD' ? '$' : ''}{price}</span><span className="text-sm font-medium flex items-center gap-1" style={{ color }}>{isPositive ? "▲" : "▼"}{change}</span></div></div>
@@ -253,7 +254,7 @@ const AuthCard = ({ onClose }) => {
   const { loginWithEmail, API_BASE } = useAuth();
   const handleSubmit = async (e) => { e.preventDefault(); const res = await loginWithEmail(email, password, isSignUp, username); if (res.success) onClose(); };
   return (
-    <div className="w-full max-w-md p-8 bg-[#09090b] border border-white/10 rounded-3xl shadow-2xl relative">
+    <div className="w-full max-w-md p-6 md:p-8 bg-[#09090b] border border-white/10 rounded-3xl shadow-2xl relative mx-4">
       <button onClick={onClose} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"><X size={20} /></button>
       <div className="flex flex-col items-center gap-2 mb-8 text-center"><h1 className="text-2xl font-serif text-white">{isSignUp ? "Create account" : "Welcome back"}</h1><p className="text-zinc-500 text-sm font-display">{isSignUp ? "Join the Alethiq network" : "Sign in to your account"}</p></div>
       <a href={`${API_BASE}/oauth2/authorization/google`} className="w-full flex items-center justify-center gap-3 py-3 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-all mb-4 text-sm"><img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="G" /> Continue with Google</a>
@@ -264,42 +265,32 @@ const AuthCard = ({ onClose }) => {
   );
 };
 
-// 🟢 MARKDOWN COMPONENTS
+// 🟢 MARKDOWN COMPONENTS (Responsive Text)
 const MarkdownComponents = { 
-  h1: ({node, ...props}) => <h1 className="text-2xl md:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
-  h2: ({node, ...props}) => <h2 className="text-lg md:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
-  h3: ({node, ...props}) => <h3 className="text-base md:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
+  h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
+  h2: ({node, ...props}) => <h2 className="text-lg md:text-xl lg:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-5 md:h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
+  h3: ({node, ...props}) => <h3 className="text-base md:text-lg lg:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
   p: ({node, children, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4 text-[15px] md:text-[16px] font-display whitespace-pre-wrap break-words">{children}</p>, 
   a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors" {...props} />, 
   ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-4 list-disc marker:text-teal-500 break-words" {...props} />, 
   li: ({node, ...props}) => <li className="pl-1 leading-relaxed break-words">{props.children}</li>, 
-  
-  // Table Styling
-  table: ({node, ...props}) => (
-    <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm" {...props} />
-      </div>
-    </div>
-  ),
+  table: ({node, ...props}) => ( <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md"> <div className="overflow-x-auto"><table className="w-full text-left text-sm" {...props} /></div> </div> ), 
   thead: ({node, ...props}) => <thead className="bg-white/[0.03] border-b border-white/10 text-zinc-400 font-semibold" {...props} />, 
   tbody: ({node, ...props}) => <tbody className="divide-y divide-white/5" {...props} />, 
   th: ({node, ...props}) => <th className="px-4 py-3 text-[11px] uppercase tracking-wider whitespace-nowrap text-teal-500/80" {...props} />, 
   tr: ({node, ...props}) => <tr className="group hover:bg-white/[0.02] transition-colors" {...props} />, 
   td: ({node, ...props}) => <td className="px-4 py-3 text-zinc-300 font-light border-r border-white/5 last:border-r-0" {...props} />, 
-
   code: ({node, inline, className, children, ...props}) => { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? ( <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-lg bg-[#1e1e1e] text-sm md:text-base w-full max-w-full overflow-x-auto"> <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={false} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter> </div> ) : <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5 break-all" {...props}>{children}</code>; } 
 };
 
-// 🟢 SOURCES GRID (Mobile-friendly Edge-to-Edge)
+// 🟢 SOURCES GRID (Edge-to-Edge on Mobile)
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
-    // Negative margin on mobile (-mx-4) to bleed to edges, then padding inside
-    <div className="z-20 border-b border-white/5 py-4 mb-6 -mx-4 px-4 sm:px-6 lg:px-8">
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+    <div className="z-20 border-b border-white/5 py-3 md:py-4 mb-6 -mx-4 px-4 sm:px-6 lg:px-8">
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
         {sources.map((source, idx) => ( 
-          <a key={idx} href={source.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-64 group flex flex-col justify-between p-3 h-24 bg-[#121212] hover:bg-[#1a1a1a] border border-white/10 hover:border-teal-500/30 rounded-xl transition-all shadow-sm overflow-hidden cursor-pointer"> 
+          <a key={idx} href={source.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-60 md:w-64 group flex flex-col justify-between p-3 h-24 bg-[#121212] hover:bg-[#1a1a1a] border border-white/10 hover:border-teal-500/30 rounded-xl transition-all shadow-sm overflow-hidden cursor-pointer active:scale-95 md:active:scale-100"> 
             <div className="flex justify-between items-start"> 
               <div className="text-[10px] font-mono text-zinc-500 truncate max-w-[80%] uppercase tracking-wider group-hover:text-teal-400 transition-colors"> {new URL(source.url).hostname.replace('www.', '')} </div> 
               <div className="p-1 rounded-full bg-white/5 group-hover:bg-teal-500/10 transition-colors"> <img src={`https://www.google.com/s2/favicons?domain=${source.url}`} alt="" className="w-3 h-3 grayscale group-hover:grayscale-0 transition-all" onError={(e) => e.target.style.display='none'} /> </div> 
@@ -341,7 +332,7 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
       {sources && sources.length > 0 && <SourcesGrid sources={sources} />}
 
       {/* 2. MAIN ANSWER */}
-      <div className="flex flex-col gap-6 px-2">
+      <div className="flex flex-col gap-4 md:gap-6 px-1 md:px-2">
         {isTyping && (
             <div className="flex items-center gap-2 mb-2 text-xs font-medium text-teal-400 uppercase tracking-wider">
                 <span className="animate-pulse">{status || "Thinking"}</span>
@@ -363,11 +354,11 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
 
         {/* 3. RELATED QUESTIONS (Limit 5) */}
         {!isTyping && relatedQuestions.length > 0 && (
-            <div className="mt-10 pt-6 border-t border-white/5">
+            <div className="mt-8 md:mt-10 pt-6 border-t border-white/5">
                 <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Layers size={12}/> Explore Further</h4>
                 <div className="flex flex-col gap-2">
                     {relatedQuestions.slice(0, 5).map((q, i) => (
-                        <button key={i} onClick={() => onRelatedClick(q)} className="w-full flex items-center justify-between p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-teal-500/20 transition-all group text-left">
+                        <button key={i} onClick={() => onRelatedClick(q)} className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-teal-500/20 transition-all group text-left active:scale-[0.99]">
                             <span className="text-sm text-zinc-400 group-hover:text-zinc-200 transition-colors font-medium">{q}</span>
                             <ArrowRight size={14} className="text-zinc-600 group-hover:text-teal-400 opacity-0 group-hover:opacity-100 transition-all" />
                         </button>
@@ -455,7 +446,6 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                         <textarea 
                             ref={textareaRef}
                             rows={1}
-                            // 🟢 Mobile Font: text-[16px] prevents iOS zoom
                             className={`w-full bg-transparent border-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 resize-none py-2 leading-relaxed outline-none font-display ${fixed ? 'text-base' : 'text-lg'}`}
                             placeholder={fixed ? "Ask a follow-up..." : "What do you want to discover today?"}
                             value={query} 
@@ -560,7 +550,8 @@ function App() {
   const hasHistory = chatHistory.length > 0;
 
   return (
-    <div className="min-h-screen w-full bg-[#09090b] text-gray-300 flex overflow-hidden relative antialiased selection:bg-teal-500/30 selection:text-white font-display">
+    // 🟢 h-[100dvh] for mobile browser address bar support
+    <div className="h-[100dvh] w-full bg-[#09090b] text-gray-300 flex overflow-hidden relative antialiased selection:bg-teal-500/30 selection:text-white font-display">
       <GlobalStyles />
       <AlethiqBackground />
       <AnimatePresence>{showAuthModal && (<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-lg p-4"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}><AuthCard onClose={() => setShowAuthModal(false)} /></motion.div></div>)}</AnimatePresence>
@@ -575,7 +566,7 @@ function App() {
 
       <div className="relative w-full h-full flex">
         {/* Sidebar */}
-        <motion.div animate={{ width: isSidebarOpen ? 260 : 0, opacity: isSidebarOpen ? 1 : 0 }} className={`fixed md:relative top-0 left-0 h-screen bg-black/20 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col overflow-hidden`}>
+        <motion.div animate={{ width: isSidebarOpen ? 260 : 0, opacity: isSidebarOpen ? 1 : 0 }} className={`fixed md:relative top-0 left-0 h-full bg-black/20 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col overflow-hidden`}>
              <div className="w-[260px] flex flex-col h-full p-4">
                 <div className="flex justify-between items-center mb-10 px-2 mt-2">
                    <div className="font-display text-lg tracking-tight flex items-center gap-2 text-zinc-100 font-semibold">
@@ -591,8 +582,8 @@ function App() {
              </div>
         </motion.div>
 
-        {/* 🟢 WRAPPED MAIN CONTENT IN AI SDK STYLE CONVERSATION COMPONENT */}
-        <div className="flex-1 h-screen relative flex flex-col">
+        {/* 🟢 WRAPPED MAIN CONTENT */}
+        <div className="flex-1 h-full relative flex flex-col">
              
              <div className="absolute top-0 left-0 w-full p-4 md:p-6 flex justify-between items-start z-30 pointer-events-none">
                   <div className="pointer-events-auto">{!isSidebarOpen && <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-transparent text-zinc-500 hover:text-white transition-colors"><Menu size={20} /></button>}</div>
@@ -602,7 +593,7 @@ function App() {
              <Conversation className="flex-1 w-full relative">
                  {/* 🅰️ HERO VIEW */}
                  {!hasHistory && (
-                   <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-12 min-h-screen">
+                   <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-12 min-h-full">
                       <div className="w-full max-w-3xl flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
                           <Persona />
                           <div className="w-full max-w-2xl mb-10">
