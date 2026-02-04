@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 // Widgets
-import StatCard from "./components/widgets/StatCard";
+// 🟢 REMOVED: import StatCard from "./components/widgets/StatCard"; (This caused the crash)
 import ImageGrid from "./components/widgets/ImageGrid";
 
 // --- 0. GLOBAL STYLES ---
@@ -45,16 +45,22 @@ const GlobalStyles = () => (
   `}</style>
 );
 
-// --- 1. VISUAL: DARK AURORA BACKGROUND ---
+// --- 1. VISUAL: DARK AURORA BACKGROUND (Green/Teal Theme) ---
 const AlethiqBackground = () => {
   return (
     <div className="fixed inset-0 w-full h-full -z-50 bg-[#09090b] overflow-hidden pointer-events-none">
+      {/* 🟢 TOP RIGHT */}
       <div className="absolute top-[-5%] right-[-10%] w-[300px] md:w-[1000px] h-[300px] md:h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[60px] md:blur-[100px] animate-pulse" 
            style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
+      
+      {/* 🟢 BOTTOM LEFT */}
       <div className="absolute bottom-[-5%] left-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[60px] md:blur-[100px]" 
            style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.3) 0%, rgba(0,0,0,0) 70%)" }} />
+      
+      {/* 🟢 CENTER */}
       <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-[100%] md:w-[1200px] h-[400px] md:h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[80px] md:blur-[120px]" 
            style={{ background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0) 70%)" }} />
+           
       <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
     </div>
@@ -77,13 +83,17 @@ const Conversation = ({ children, className }) => {
     if (!container) return;
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
+      // Show button if user is scrolled up
       setShowScrollButton(scrollHeight - scrollTop - clientHeight > 300);
     };
     container.addEventListener('scroll', handleScroll);
+    
+    // Initial check
     if (container.scrollHeight > container.clientHeight) {
         const { scrollTop, scrollHeight, clientHeight } = container;
         if (scrollHeight - scrollTop - clientHeight < 200) scrollToBottom();
     }
+    
     return () => container.removeEventListener('scroll', handleScroll);
   }, [children, scrollToBottom]);
 
@@ -101,7 +111,7 @@ const Conversation = ({ children, className }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             onClick={scrollToBottom}
-            className="absolute bottom-44 md:bottom-48 left-1/2 -translate-x-1/2 z-30 p-3 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
+            className="absolute bottom-40 md:bottom-48 left-1/2 -translate-x-1/2 z-30 p-3 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
           >
             <ArrowDown size={20} />
           </motion.button>
@@ -124,6 +134,7 @@ const Persona = () => {
         <span className="text-sm font-light text-gray-200 tracking-wide">How can I help you today?</span>
         <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#121212] border-b border-r border-white/10 transform rotate-45"></div>
       </motion.div>
+      
       <div className="relative group">
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[80%] h-[80%] bg-teal-500/20 rounded-full blur-[40px] opacity-60 group-hover:opacity-80 transition-opacity duration-1000" />
         <div className="relative w-24 h-24 rounded-full bg-gradient-to-b from-[#1a1a1a] to-black border border-white/10 flex items-center justify-center overflow-hidden transition-transform duration-700 ease-out group-hover:scale-105 shadow-[0_0_50px_-10px_rgba(20,184,166,0.3)]">
@@ -201,9 +212,10 @@ const SimpleSparkline = ({ data, color }) => {
   );
 };
 
-// 🟢 SAFE STAT CARD (Inline to prevent crashes)
+// 🟢 SAFE STAT CARD (Inline)
 const StatCard = ({ title, data }) => {
   if (!data) return null;
+  
   if (data.Low && data.High) {
       return (
           <div className="p-4 bg-[#121212] rounded-xl border border-white/5 my-4 w-full max-w-sm">
@@ -220,6 +232,7 @@ const StatCard = ({ title, data }) => {
           </div>
       );
   }
+
   return (
     <div className="p-4 bg-[#121212] rounded-xl border border-white/5 my-4 w-full max-w-sm">
       {title && <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">{title}</h3>}
@@ -300,16 +313,13 @@ const AuthCard = ({ onClose }) => {
 // 🟢 MARKDOWN COMPONENTS
 const MarkdownComponents = { 
   h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
-  h2: ({node, ...props}) => <h2 className="text-lg md:text-xl lg:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-5 md:h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
+  h2: ({node, ...props}) => <h2 className="text-lg md:text-xl lg:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
   h3: ({node, ...props}) => <h3 className="text-base md:text-lg lg:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
-  // 🟢 Fixed Paragraphs: break-words & w-full prevents overflow
   p: ({node, children, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4 text-[15px] md:text-[16px] font-display break-words w-full" {...props}>{children}</p>, 
-  // 🟢 Links must break all
   a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors break-all" {...props} />, 
   ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-4 list-disc marker:text-teal-500 break-words" {...props} />, 
   li: ({node, ...props}) => <li className="pl-1 leading-relaxed break-words">{props.children}</li>, 
   
-  // 🟢 Table: Strict Container
   table: ({node, ...props}) => (
     <div className="my-8 w-full max-w-[85vw] md:max-w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md">
       <div className="overflow-x-auto">
@@ -323,7 +333,6 @@ const MarkdownComponents = {
   tr: ({node, ...props}) => <tr className="group hover:bg-white/[0.02] transition-colors" {...props} />, 
   td: ({node, ...props}) => <td className="px-4 py-3 text-zinc-300 font-light border-r border-white/5 last:border-r-0" {...props} />, 
 
-  // 🟢 Code Block: Max width constraint for mobile
   code: ({node, inline, className, children, ...props}) => { 
       const match = /language-(\w+)/.exec(className || ''); 
       return !inline && match ? ( 
@@ -338,7 +347,7 @@ const MarkdownComponents = {
   } 
 };
 
-// 🟢 SOURCES GRID (Edge-to-Edge)
+// 🟢 SOURCES GRID
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
@@ -358,13 +367,12 @@ const SourcesGrid = ({ sources }) => {
   ); 
 };
 
-// 🟢 CONTENT BLOCK (Cleaned Related Questions)
+// 🟢 CONTENT BLOCK
 const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick }) => { 
   const [cleanAnswer, relatedQuestions] = useMemo(() => { 
       if (!data) return ["", []]; 
       const parts = data.split("|||"); 
       const mainContent = parts[0];
-      // 🟢 STRIP OUT ANY JSON WIDGET CODE FROM RELATED QUESTIONS
       const questions = parts.slice(1)
           .map(q => q.replace(/:::.*?:::/gs, '').trim())
           .filter(q => q.length > 5);
@@ -414,7 +422,6 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
 
         {!isTyping && images && images.length > 0 && <ImageGrid images={images} />}
 
-        {/* 🟢 Limit 5 Related Questions */}
         {!isTyping && relatedQuestions.length > 0 && (
             <div className="mt-8 md:mt-10 pt-6 border-t border-white/5">
                 <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Layers size={12}/> Explore Further</h4>
@@ -603,7 +610,6 @@ function App() {
     setQuery(""); 
     setLastQuery(searchQuery); 
     setAutoScroll(true); 
-    // 🟢 FIX: Send null if no images to prevent 422 Error
     const imagePayload = images && images.length > 0 ? images[0] : null;
     streamData(searchQuery, "fast", currentHistory, imagePayload); 
   };
@@ -614,7 +620,7 @@ function App() {
   const hasHistory = chatHistory.length > 0;
 
   return (
-    // 🟢 1. STRICT OVERFLOW HIDDEN on BODY
+    // 🟢 h-[100dvh] for mobile browser address bar support
     <div className="h-[100dvh] w-full bg-[#09090b] text-gray-300 flex overflow-hidden relative antialiased selection:bg-teal-500/30 selection:text-white font-display">
       <GlobalStyles />
       <AlethiqBackground />
