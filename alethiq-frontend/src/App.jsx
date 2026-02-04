@@ -507,11 +507,7 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                 <div className={`relative flex flex-col bg-white dark:bg-[#121212] rounded-2xl border border-gray-200 dark:border-white/10 shadow-xl dark:shadow-black/50 overflow-hidden transition-all duration-300 group-focus-within:shadow-[0_0_20px_rgba(20,184,166,0.15)] focus-within:border-teal-500/50 ${fixed ? 'bg-opacity-90 backdrop-blur-xl' : ''}`}>
                     
                     <div className="flex items-start p-3 md:p-4">
-                        {fixed && (
-                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 mr-3 mt-1 flex-shrink-0">
-                                <Plus size={18} className="text-zinc-500" />
-                            </div>
-                        )}
+                        
                         <textarea 
                             ref={textareaRef}
                             rows={1}
