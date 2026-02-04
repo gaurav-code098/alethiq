@@ -476,7 +476,7 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                             ref={textareaRef}
                             rows={1}
                             className={`w-full bg-transparent border-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 resize-none py-2 leading-relaxed outline-none font-display ${fixed ? 'text-base' : 'text-lg'}`}
-                            placeholder={fixed ? "Ask a follow-up..." : "What do you want to discover today?"}
+                            placeholder={fixed ? "Ask a follow-up..." : "What you looking for?"}
                             value={query} 
                             onChange={handleInput} 
                             onKeyDown={handleKeyDown}
