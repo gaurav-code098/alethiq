@@ -42,16 +42,22 @@ const GlobalStyles = () => (
   `}</style>
 );
 
-// --- 1. VISUAL: DARK AURORA BACKGROUND ---
+// --- 1. VISUAL: DARK AURORA BACKGROUND (Green/Teal - Mobile Optimized) ---
 const AlethiqBackground = () => {
   return (
     <div className="fixed inset-0 w-full h-full -z-50 bg-[#09090b] overflow-hidden pointer-events-none">
+      {/* 🟢 TOP RIGHT */}
       <div className="absolute top-[-5%] right-[-10%] w-[300px] md:w-[1000px] h-[300px] md:h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[60px] md:blur-[100px] animate-pulse" 
-           style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.5) 0%, rgba(0,0,0,0) 70%)" }} />
+           style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
+      
+      {/* 🟢 BOTTOM LEFT */}
       <div className="absolute bottom-[-5%] left-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[60px] md:blur-[100px]" 
-           style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
+           style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.3) 0%, rgba(0,0,0,0) 70%)" }} />
+      
+      {/* 🟢 CENTER */}
       <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-[100%] md:w-[1200px] h-[400px] md:h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[80px] md:blur-[120px]" 
            style={{ background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0) 70%)" }} />
+           
       <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
     </div>
@@ -74,13 +80,17 @@ const Conversation = ({ children, className }) => {
     if (!container) return;
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
-      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 150);
+      // Show button if user scrolls up significantly
+      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 300);
     };
     container.addEventListener('scroll', handleScroll);
+    
+    // Auto-scroll on mount/update if near bottom
     if (container.scrollHeight > container.clientHeight) {
         const { scrollTop, scrollHeight, clientHeight } = container;
-        if (scrollHeight - scrollTop - clientHeight < 200) scrollToBottom();
+        if (scrollHeight - scrollTop - clientHeight < 300) scrollToBottom();
     }
+    
     return () => container.removeEventListener('scroll', handleScroll);
   }, [children, scrollToBottom]);
 
@@ -88,7 +98,7 @@ const Conversation = ({ children, className }) => {
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
-      <div ref={containerRef} className={`flex-1 overflow-y-auto scroll-smooth w-full ${className}`}>
+      <div ref={containerRef} className={`flex-1 overflow-y-auto scroll-smooth w-full overflow-x-hidden ${className}`}>
         {children}
       </div>
       <AnimatePresence>
@@ -98,7 +108,8 @@ const Conversation = ({ children, className }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             onClick={scrollToBottom}
-            className="absolute bottom-36 md:bottom-40 left-1/2 -translate-x-1/2 z-30 p-2.5 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
+            // 🟢 Higher position on mobile to avoid search bar overlap
+            className="absolute bottom-44 md:bottom-48 left-1/2 -translate-x-1/2 z-30 p-3 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
           >
             <ArrowDown size={20} />
           </motion.button>
@@ -121,6 +132,8 @@ const Persona = () => {
         <span className="text-sm font-light text-gray-200 tracking-wide">How can I help you today?</span>
         <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#121212] border-b border-r border-white/10 transform rotate-45"></div>
       </motion.div>
+      
+      {/* Flashy Natural Orb */}
       <div className="relative group">
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[80%] h-[80%] bg-teal-500/20 rounded-full blur-[40px] opacity-60 group-hover:opacity-80 transition-opacity duration-1000" />
         <div className="relative w-24 h-24 rounded-full bg-gradient-to-b from-[#1a1a1a] to-black border border-white/10 flex items-center justify-center overflow-hidden transition-transform duration-700 ease-out group-hover:scale-105 shadow-[0_0_50px_-10px_rgba(20,184,166,0.3)]">
@@ -257,20 +270,21 @@ const AuthCard = ({ onClose }) => {
   );
 };
 
-// 🟢 MARKDOWN COMPONENTS (Responsive Text & Forced Wrapping)
+// 🟢 MARKDOWN COMPONENTS (Fixed Overflow)
 const MarkdownComponents = { 
   h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
   h2: ({node, ...props}) => <h2 className="text-lg md:text-xl lg:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-5 md:h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
   h3: ({node, ...props}) => <h3 className="text-base md:text-lg lg:text-xl font-display font-semibold text-zinc-200 mt-5 mb-2 break-words" {...props} />,
   // 🟢 Fixed Paragraphs: break-words & w-full prevents overflow
   p: ({node, children, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4 text-[15px] md:text-[16px] font-display break-words w-full" {...props}>{children}</p>, 
+  // 🟢 Links must break all
   a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-4 transition-colors break-all" {...props} />, 
   ul: ({node, ...props}) => <ul className="space-y-2 mb-6 text-zinc-300 pl-4 list-disc marker:text-teal-500 break-words" {...props} />, 
   li: ({node, ...props}) => <li className="pl-1 leading-relaxed break-words">{props.children}</li>, 
   
-  // 🟢 Table Styling: Wrapper with overflow-x-auto handles tables on mobile
+  // 🟢 Table: Strict Container
   table: ({node, ...props}) => (
-    <div className="my-8 w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md">
+    <div className="my-8 w-full max-w-[85vw] md:max-w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-md">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm" {...props} />
       </div>
@@ -282,16 +296,27 @@ const MarkdownComponents = {
   tr: ({node, ...props}) => <tr className="group hover:bg-white/[0.02] transition-colors" {...props} />, 
   td: ({node, ...props}) => <td className="px-4 py-3 text-zinc-300 font-light border-r border-white/5 last:border-r-0" {...props} />, 
 
-  // 🟢 Code Block: max-w-full + overflow-x-auto keeps code inside screen
-  code: ({node, inline, className, children, ...props}) => { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? ( <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-lg bg-[#1e1e1e] text-sm md:text-base w-full max-w-full overflow-x-auto"> <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={false} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter> </div> ) : <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5 break-all" {...props}>{children}</code>; } 
+  // 🟢 Code Block: Max width constraint for mobile
+  code: ({node, inline, className, children, ...props}) => { 
+      const match = /language-(\w+)/.exec(className || ''); 
+      return !inline && match ? ( 
+          <div className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-lg bg-[#1e1e1e] text-sm md:text-base w-full max-w-[85vw] md:max-w-full overflow-x-auto"> 
+              <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '1.25rem', background: 'transparent' }} wrapLongLines={false} {...props}>
+                  {String(children).replace(/\n$/, '')}
+              </SyntaxHighlighter> 
+          </div> 
+      ) : (
+          <code className="bg-white/10 text-teal-300 rounded px-1.5 py-0.5 text-xs md:text-sm font-mono border border-white/5 break-all" {...props}>{children}</code>
+      ); 
+  } 
 };
 
-// 🟢 SOURCES GRID (Mobile Edge-to-Edge Scroll)
+// 🟢 SOURCES GRID (Edge-to-Edge)
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
     // Negative margin on mobile (-mx-4) to bleed to screen edge
-    <div className="z-20 border-b border-white/5 py-3 md:py-4 mb-6 -mx-4 px-4 sm:px-6 lg:px-8">
+    <div className="z-20 border-b border-white/5 py-3 md:py-4 mb-6 -mx-4 px-4 sm:px-6 lg:px-8 w-[calc(100%+2rem)] md:w-auto overflow-hidden">
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
         {sources.map((source, idx) => ( 
           <a key={idx} href={source.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-60 md:w-64 group flex flex-col justify-between p-3 h-24 bg-[#121212] hover:bg-[#1a1a1a] border border-white/10 hover:border-teal-500/30 rounded-xl transition-all shadow-sm overflow-hidden cursor-pointer active:scale-95 md:active:scale-100"> 
@@ -330,8 +355,7 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
   }, [displayData]);
 
   return (
-    // 🟢 Added max-w-full and overflow-hidden to main wrapper to prevent horizontal scroll
-    <div className="w-full max-w-[900px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 relative max-w-full overflow-hidden">
+    <div className="w-full max-w-[900px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 relative max-w-full">
       
       {/* 1. SOURCES */}
       {sources && sources.length > 0 && <SourcesGrid sources={sources} />}
@@ -345,13 +369,12 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
             </div>
         )}
 
-        {/* 🟢 Force prose to break words and not overflow */}
-        <div className="prose prose-lg prose-zinc dark:prose-invert max-w-none break-words w-full">
+        <div className="prose prose-lg prose-zinc dark:prose-invert max-w-none w-full break-words">
             {contentParts.map((part, idx) => (
                 <React.Fragment key={idx}>
                     {part.type === 'text' && <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{part.content}</ReactMarkdown>}
-                    {part.type === 'stat-card' && <div className="my-6"><StatCard title="Key Insight" data={part.data} /></div>}
-                    {part.type === 'stock-card' && <div className="my-6"><StockCard data={part.data} /></div>}
+                    {part.type === 'stat-card' && <div className="my-6 w-full"><StatCard title="Key Insight" data={part.data} /></div>}
+                    {part.type === 'stock-card' && <div className="my-6 w-full"><StockCard data={part.data} /></div>}
                 </React.Fragment>
             ))}
         </div>
@@ -365,8 +388,8 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
                 <div className="flex flex-col gap-2">
                     {relatedQuestions.slice(0, 5).map((q, i) => (
                         <button key={i} onClick={() => onRelatedClick(q)} className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-teal-500/20 transition-all group text-left active:scale-[0.99]">
-                            <span className="text-sm text-zinc-400 group-hover:text-zinc-200 transition-colors font-medium">{q}</span>
-                            <ArrowRight size={14} className="text-zinc-600 group-hover:text-teal-400 opacity-0 group-hover:opacity-100 transition-all" />
+                            <span className="text-sm text-zinc-400 group-hover:text-zinc-200 transition-colors font-medium break-words pr-2">{q}</span>
+                            <ArrowRight size={14} className="text-zinc-600 group-hover:text-teal-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0" />
                         </button>
                     ))}
                 </div>
@@ -452,7 +475,6 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                         <textarea 
                             ref={textareaRef}
                             rows={1}
-                            // 🟢 Mobile Font: text-base prevents iOS zoom
                             className={`w-full bg-transparent border-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 resize-none py-2 leading-relaxed outline-none font-display ${fixed ? 'text-base' : 'text-lg'}`}
                             placeholder={fixed ? "Ask a follow-up..." : "What do you want to discover today?"}
                             value={query} 
@@ -557,7 +579,7 @@ function App() {
   const hasHistory = chatHistory.length > 0;
 
   return (
-    // 🟢 h-[100dvh] for mobile address bar compensation
+    // 🟢 1. STRICT OVERFLOW HIDDEN on BODY to prevent horizontal scrolling
     <div className="h-[100dvh] w-full bg-[#09090b] text-gray-300 flex overflow-hidden relative antialiased selection:bg-teal-500/30 selection:text-white font-display">
       <GlobalStyles />
       <AlethiqBackground />
@@ -571,7 +593,7 @@ function App() {
         />
       )}
 
-      <div className="relative w-full h-full flex">
+      <div className="relative w-full h-full flex overflow-hidden">
         {/* Sidebar */}
         <motion.div animate={{ width: isSidebarOpen ? 260 : 0, opacity: isSidebarOpen ? 1 : 0 }} className={`fixed md:relative top-0 left-0 h-full bg-black/20 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col overflow-hidden`}>
              <div className="w-[260px] flex flex-col h-full p-4">
@@ -590,7 +612,7 @@ function App() {
         </motion.div>
 
         {/* 🟢 WRAPPED MAIN CONTENT */}
-        <div className="flex-1 h-full relative flex flex-col">
+        <div className="flex-1 h-full relative flex flex-col overflow-hidden w-full">
              
              <div className="absolute top-0 left-0 w-full p-4 md:p-6 flex justify-between items-start z-30 pointer-events-none">
                   <div className="pointer-events-auto">{!isSidebarOpen && <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-transparent text-zinc-500 hover:text-white transition-colors"><Menu size={20} /></button>}</div>
@@ -624,13 +646,13 @@ function App() {
 
                  {/* 🅱️ RESULT VIEW */}
                  {hasHistory && (
-                   // 🟢 PADDING to pb-64
-                   <div className="w-full max-w-5xl mx-auto pt-20 md:pt-24 pb-64 px-4 sm:px-6 lg:px-8">
+                   // 🟢 2. PADDING to pb-96 for mobile clearance
+                   <div className="w-full max-w-5xl mx-auto pt-20 md:pt-24 pb-96 px-4 sm:px-6 lg:px-8">
                       {chatHistory.map((msg, idx) => (
                          <div key={idx} className="group mb-12 md:mb-16 border-b border-white/5 pb-12 md:pb-16 last:border-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                              {msg.type === 'user' ? (
                                <div className="w-full max-w-[900px] mx-auto mb-6 md:mb-10">
-                                  <h2 className="text-2xl md:text-4xl font-serif text-white tracking-tight leading-tight">{msg.content}</h2>
+                                  <h2 className="text-2xl md:text-4xl font-serif text-white tracking-tight leading-tight break-words">{msg.content}</h2>
                                </div>
                              ) : (
                                <ContentBlock data={msg.content} sources={msg.sources} images={msg.images} isTyping={false} onRelatedClick={handleSearch} />
