@@ -26,7 +26,7 @@ const GlobalStyles = () => (
     .font-display { font-family: 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     
-    /* Scrollbar */
+    /* Custom Scrollbar - Hidden on mobile for cleaner look */
     @media (min-width: 768px) {
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -37,28 +37,28 @@ const GlobalStyles = () => (
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Mobile Touch Fixes */
-    input, textarea, button, select, a { -webkit-tap-highlight-color: transparent; }
+    /* Prevent image overflow in markdown */
+    .prose img { max-width: 100%; height: auto; border-radius: 0.75rem; }
   `}</style>
 );
 
-// --- 1. VISUAL: DARK AURORA BACKGROUND (Green/Teal - Mobile Optimized) ---
+// --- 1. VISUAL: DARK AURORA BACKGROUND (Mobile Optimized) ---
 const AlethiqBackground = () => {
   return (
     <div className="fixed inset-0 w-full h-full -z-50 bg-[#09090b] overflow-hidden pointer-events-none">
       {/* 🟢 TOP RIGHT */}
       <div className="absolute top-[-5%] right-[-10%] w-[300px] md:w-[1000px] h-[300px] md:h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[60px] md:blur-[100px] animate-pulse" 
-           style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
+           style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.5) 0%, rgba(0,0,0,0) 70%)" }} />
       
       {/* 🟢 BOTTOM LEFT */}
       <div className="absolute bottom-[-5%] left-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[60px] md:blur-[100px]" 
-           style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.3) 0%, rgba(0,0,0,0) 70%)" }} />
+           style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
       
       {/* 🟢 CENTER */}
       <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-[100%] md:w-[1200px] h-[400px] md:h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[80px] md:blur-[120px]" 
            style={{ background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0) 70%)" }} />
            
-      <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay" 
+      <div className="absolute inset-0 opacity-[0.06] pointer-events-none mix-blend-overlay" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
     </div>
   );
@@ -71,26 +71,30 @@ const Conversation = ({ children, className }) => {
 
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+      containerRef.current.scrollTo({
+        top: containerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, []);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
-      // Show button if user scrolls up significantly
-      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 300);
+      const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 150;
+      setShowScrollButton(isNotAtBottom);
     };
+
     container.addEventListener('scroll', handleScroll);
-    
-    // Auto-scroll on mount/update if near bottom
     if (container.scrollHeight > container.clientHeight) {
         const { scrollTop, scrollHeight, clientHeight } = container;
-        if (scrollHeight - scrollTop - clientHeight < 300) scrollToBottom();
+        if (scrollHeight - scrollTop - clientHeight < 200) {
+             scrollToBottom();
+        }
     }
-    
     return () => container.removeEventListener('scroll', handleScroll);
   }, [children, scrollToBottom]);
 
@@ -108,8 +112,7 @@ const Conversation = ({ children, className }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             onClick={scrollToBottom}
-            // 🟢 Higher position on mobile to avoid search bar overlap
-            className="absolute bottom-44 md:bottom-48 left-1/2 -translate-x-1/2 z-30 p-3 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
+            className="absolute bottom-36 md:bottom-40 left-1/2 -translate-x-1/2 z-30 p-2.5 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
           >
             <ArrowDown size={20} />
           </motion.button>
@@ -132,8 +135,6 @@ const Persona = () => {
         <span className="text-sm font-light text-gray-200 tracking-wide">How can I help you today?</span>
         <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#121212] border-b border-r border-white/10 transform rotate-45"></div>
       </motion.div>
-      
-      {/* Flashy Natural Orb */}
       <div className="relative group">
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[80%] h-[80%] bg-teal-500/20 rounded-full blur-[40px] opacity-60 group-hover:opacity-80 transition-opacity duration-1000" />
         <div className="relative w-24 h-24 rounded-full bg-gradient-to-b from-[#1a1a1a] to-black border border-white/10 flex items-center justify-center overflow-hidden transition-transform duration-700 ease-out group-hover:scale-105 shadow-[0_0_50px_-10px_rgba(20,184,166,0.3)]">
@@ -311,7 +312,7 @@ const MarkdownComponents = {
   } 
 };
 
-// 🟢 SOURCES GRID (Edge-to-Edge)
+// 🟢 SOURCES GRID (Mobile Edge-to-Edge Scroll)
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
@@ -451,7 +452,8 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                 <div className="absolute bottom-0 inset-x-0 h-32 md:h-40 bg-gradient-to-t from-[#09090b] via-[#09090b]/95 to-transparent pointer-events-none"></div>
             )}
 
-            <div className={`relative w-full pointer-events-auto ${fixed ? 'max-w-3xl px-4 pb-6 md:pb-8' : 'max-w-2xl px-4'}`}>
+            {/* 🟢 Mobile Optimization: max-w-full and px-4 for proper fitting */}
+            <div className={`relative w-full pointer-events-auto ${fixed ? 'max-w-3xl px-4 pb-6 md:pb-8' : 'w-[90%] max-w-lg md:max-w-2xl px-4'}`}>
                 
                 {selectedImages.length > 0 && (
                     <div className="flex gap-2 mb-2 overflow-x-auto w-full px-1 scrollbar-hide">
@@ -476,7 +478,7 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                             ref={textareaRef}
                             rows={1}
                             className={`w-full bg-transparent border-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 resize-none py-2 leading-relaxed outline-none font-display ${fixed ? 'text-base' : 'text-lg'}`}
-                            placeholder={fixed ? "Ask a follow-up..." : "What you looking for?"}
+                            placeholder={fixed ? "Ask a follow-up..." : "What do you want to discover today?"}
                             value={query} 
                             onChange={handleInput} 
                             onKeyDown={handleKeyDown}
@@ -579,7 +581,6 @@ function App() {
   const hasHistory = chatHistory.length > 0;
 
   return (
-    // 🟢 1. STRICT OVERFLOW HIDDEN on BODY to prevent horizontal scrolling
     <div className="h-[100dvh] w-full bg-[#09090b] text-gray-300 flex overflow-hidden relative antialiased selection:bg-teal-500/30 selection:text-white font-display">
       <GlobalStyles />
       <AlethiqBackground />
@@ -646,7 +647,7 @@ function App() {
 
                  {/* 🅱️ RESULT VIEW */}
                  {hasHistory && (
-                   // 🟢 2. PADDING to pb-96 for mobile clearance
+                   // 🟢 PADDING to pb-96
                    <div className="w-full max-w-5xl mx-auto pt-20 md:pt-24 pb-96 px-4 sm:px-6 lg:px-8">
                       {chatHistory.map((msg, idx) => (
                          <div key={idx} className="group mb-12 md:mb-16 border-b border-white/5 pb-12 md:pb-16 last:border-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
