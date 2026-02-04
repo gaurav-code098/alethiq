@@ -26,7 +26,7 @@ const GlobalStyles = () => (
     .font-display { font-family: 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     
-    /* Custom Scrollbar - Hidden on mobile for cleaner look */
+    /* Scrollbar */
     @media (min-width: 768px) {
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -37,28 +37,25 @@ const GlobalStyles = () => (
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Prevent image overflow in markdown */
-    .prose img { max-width: 100%; height: auto; border-radius: 0.75rem; }
+    /* Mobile Touch Fixes */
+    input, textarea, button, select, a { -webkit-tap-highlight-color: transparent; }
+    
+    /* Markdown Image Fix */
+    .prose img { width: 100%; height: auto; border-radius: 0.75rem; }
   `}</style>
 );
 
-// --- 1. VISUAL: DARK AURORA BACKGROUND (Mobile Optimized) ---
+// --- 1. VISUAL: DARK AURORA BACKGROUND ---
 const AlethiqBackground = () => {
   return (
     <div className="fixed inset-0 w-full h-full -z-50 bg-[#09090b] overflow-hidden pointer-events-none">
-      {/* 🟢 TOP RIGHT */}
       <div className="absolute top-[-5%] right-[-10%] w-[300px] md:w-[1000px] h-[300px] md:h-[1000px] rounded-full opacity-30 mix-blend-screen filter blur-[60px] md:blur-[100px] animate-pulse" 
-           style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.5) 0%, rgba(0,0,0,0) 70%)" }} />
-      
-      {/* 🟢 BOTTOM LEFT */}
+           style={{ background: "radial-gradient(circle, rgba(45, 212, 191, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
       <div className="absolute bottom-[-5%] left-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] rounded-full opacity-25 mix-blend-screen filter blur-[60px] md:blur-[100px]" 
-           style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.4) 0%, rgba(0,0,0,0) 70%)" }} />
-      
-      {/* 🟢 CENTER */}
+           style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.3) 0%, rgba(0,0,0,0) 70%)" }} />
       <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-[100%] md:w-[1200px] h-[400px] md:h-[800px] rounded-full opacity-10 mix-blend-screen filter blur-[80px] md:blur-[120px]" 
            style={{ background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0,0,0,0) 70%)" }} />
-           
-      <div className="absolute inset-0 opacity-[0.06] pointer-events-none mix-blend-overlay" 
+      <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
     </div>
   );
@@ -71,29 +68,21 @@ const Conversation = ({ children, className }) => {
 
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTo({
-        top: containerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
+      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, []);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
-      const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 150;
-      setShowScrollButton(isNotAtBottom);
+      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 300);
     };
-
     container.addEventListener('scroll', handleScroll);
     if (container.scrollHeight > container.clientHeight) {
         const { scrollTop, scrollHeight, clientHeight } = container;
-        if (scrollHeight - scrollTop - clientHeight < 200) {
-             scrollToBottom();
-        }
+        if (scrollHeight - scrollTop - clientHeight < 200) scrollToBottom();
     }
     return () => container.removeEventListener('scroll', handleScroll);
   }, [children, scrollToBottom]);
@@ -112,7 +101,7 @@ const Conversation = ({ children, className }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             onClick={scrollToBottom}
-            className="absolute bottom-36 md:bottom-40 left-1/2 -translate-x-1/2 z-30 p-2.5 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
+            className="absolute bottom-44 md:bottom-48 left-1/2 -translate-x-1/2 z-30 p-3 bg-[#1a1a1a] border border-white/10 rounded-full shadow-2xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
           >
             <ArrowDown size={20} />
           </motion.button>
@@ -212,6 +201,43 @@ const SimpleSparkline = ({ data, color }) => {
   );
 };
 
+// 🟢 SAFE STAT CARD (Inline to prevent crashes)
+const StatCard = ({ title, data }) => {
+  if (!data) return null;
+  if (data.Low && data.High) {
+      return (
+          <div className="p-4 bg-[#121212] rounded-xl border border-white/5 my-4 w-full max-w-sm">
+              <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">{title || "Range"}</h3>
+              <div className="flex justify-between text-sm mb-2 text-zinc-300 font-mono">
+                  <span>L: <span className="text-white">{data.Low}</span></span>
+                  <span>H: <span className="text-white">{data.High}</span></span>
+              </div>
+              <div className="relative h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
+                  <div className="absolute top-0 bottom-0 bg-teal-500/50" style={{ left: '10%', right: '10%' }}></div>
+                  <div className="absolute top-0 bottom-0 w-1 bg-white" style={{ left: '50%' }}></div>
+              </div>
+              <div className="text-center text-[10px] text-zinc-500 uppercase tracking-wider">{data.Current || "Current"}</div>
+          </div>
+      );
+  }
+  return (
+    <div className="p-4 bg-[#121212] rounded-xl border border-white/5 my-4 w-full max-w-sm">
+      {title && <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">{title}</h3>}
+      <div className="grid grid-cols-2 gap-4">
+        {Object.entries(data).map(([k, v], i) => {
+            if (typeof v === 'object') return null; 
+            return (
+                <div key={i}>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wide">{k.replace(/_/g, ' ')}</p>
+                    <p className="text-sm text-zinc-200 font-medium truncate">{v}</p>
+                </div>
+            );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const StockCard = ({ data }) => {
   const price = data.price || data.current_price;
   const symbol = data.symbol || data.entity || "STOCK";
@@ -271,7 +297,7 @@ const AuthCard = ({ onClose }) => {
   );
 };
 
-// 🟢 MARKDOWN COMPONENTS (Fixed Overflow)
+// 🟢 MARKDOWN COMPONENTS
 const MarkdownComponents = { 
   h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-100 mt-8 mb-4 break-words" {...props} />, 
   h2: ({node, ...props}) => <h2 className="text-lg md:text-xl lg:text-2xl font-serif text-zinc-200 mt-6 mb-3 flex items-center gap-2 break-words" {...props}><div className="w-1 h-5 md:h-6 bg-teal-500 rounded-full" />{props.children}</h2>, 
@@ -312,11 +338,10 @@ const MarkdownComponents = {
   } 
 };
 
-// 🟢 SOURCES GRID (Mobile Edge-to-Edge Scroll)
+// 🟢 SOURCES GRID (Edge-to-Edge)
 const SourcesGrid = ({ sources }) => { 
   if (!sources || sources.length === 0) return null; 
   return ( 
-    // Negative margin on mobile (-mx-4) to bleed to screen edge
     <div className="z-20 border-b border-white/5 py-3 md:py-4 mb-6 -mx-4 px-4 sm:px-6 lg:px-8 w-[calc(100%+2rem)] md:w-auto overflow-hidden">
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
         {sources.map((source, idx) => ( 
@@ -333,9 +358,19 @@ const SourcesGrid = ({ sources }) => {
   ); 
 };
 
-// 🟢 CONTENT BLOCK
+// 🟢 CONTENT BLOCK (Cleaned Related Questions)
 const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick }) => { 
-  const [cleanAnswer, relatedQuestions] = useMemo(() => { if (!data) return ["", []]; const parts = data.split("|||"); return [parts[0], parts.slice(1).map(q => q.trim()).filter(q => q.length > 5)]; }, [data]); 
+  const [cleanAnswer, relatedQuestions] = useMemo(() => { 
+      if (!data) return ["", []]; 
+      const parts = data.split("|||"); 
+      const mainContent = parts[0];
+      // 🟢 STRIP OUT ANY JSON WIDGET CODE FROM RELATED QUESTIONS
+      const questions = parts.slice(1)
+          .map(q => q.replace(/:::.*?:::/gs, '').trim())
+          .filter(q => q.length > 5);
+      return [mainContent, questions]; 
+  }, [data]); 
+  
   const displayData = isTyping ? useTypewriter(cleanAnswer, 0.5) : cleanAnswer; 
   
   const contentParts = useMemo(() => {
@@ -357,11 +392,8 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
 
   return (
     <div className="w-full max-w-[900px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 relative max-w-full">
-      
-      {/* 1. SOURCES */}
       {sources && sources.length > 0 && <SourcesGrid sources={sources} />}
 
-      {/* 2. MAIN ANSWER */}
       <div className="flex flex-col gap-4 md:gap-6 px-1 md:px-2 min-w-0">
         {isTyping && (
             <div className="flex items-center gap-2 mb-2 text-xs font-medium text-teal-400 uppercase tracking-wider">
@@ -382,7 +414,7 @@ const ContentBlock = ({ data, sources, images, isTyping, status, onRelatedClick 
 
         {!isTyping && images && images.length > 0 && <ImageGrid images={images} />}
 
-        {/* 3. RELATED QUESTIONS */}
+        {/* 🟢 Limit 5 Related Questions */}
         {!isTyping && relatedQuestions.length > 0 && (
             <div className="mt-8 md:mt-10 pt-6 border-t border-white/5">
                 <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Layers size={12}/> Explore Further</h4>
@@ -452,7 +484,6 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                 <div className="absolute bottom-0 inset-x-0 h-32 md:h-40 bg-gradient-to-t from-[#09090b] via-[#09090b]/95 to-transparent pointer-events-none"></div>
             )}
 
-            {/* 🟢 Mobile Optimization: max-w-full and px-4 for proper fitting */}
             <div className={`relative w-full pointer-events-auto ${fixed ? 'max-w-3xl px-4 pb-6 md:pb-8' : 'w-[90%] max-w-lg md:max-w-2xl px-4'}`}>
                 
                 {selectedImages.length > 0 && (
@@ -478,7 +509,7 @@ const SearchForm = ({ fixed = false, query, setQuery, handleSearch, isStreaming,
                             ref={textareaRef}
                             rows={1}
                             className={`w-full bg-transparent border-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 resize-none py-2 leading-relaxed outline-none font-display ${fixed ? 'text-base' : 'text-lg'}`}
-                            placeholder={fixed ? "Ask a follow-up..." : "What are you looking for?"}
+                            placeholder={fixed ? "Ask a follow-up..." : "What do you want to discover today?"}
                             value={query} 
                             onChange={handleInput} 
                             onKeyDown={handleKeyDown}
@@ -567,19 +598,13 @@ function App() {
   
   const handleSearch = (searchQuery, images = []) => { 
     if (!searchQuery?.trim() && (!images || images.length === 0)) return; 
-    
-
     const currentHistory = [...chatHistory]; 
-    
     setChatHistory(prev => [...prev, { type: 'user', content: searchQuery, images: images }]); 
-    
-
     setQuery(""); 
     setLastQuery(searchQuery); 
     setAutoScroll(true); 
-    
+    // 🟢 FIX: Send null if no images to prevent 422 Error
     const imagePayload = images && images.length > 0 ? images[0] : null;
- 
     streamData(searchQuery, "fast", currentHistory, imagePayload); 
   };
 
@@ -589,6 +614,7 @@ function App() {
   const hasHistory = chatHistory.length > 0;
 
   return (
+    // 🟢 1. STRICT OVERFLOW HIDDEN on BODY
     <div className="h-[100dvh] w-full bg-[#09090b] text-gray-300 flex overflow-hidden relative antialiased selection:bg-teal-500/30 selection:text-white font-display">
       <GlobalStyles />
       <AlethiqBackground />
@@ -655,7 +681,7 @@ function App() {
 
                  {/* 🅱️ RESULT VIEW */}
                  {hasHistory && (
-                   // 🟢 PADDING to pb-96
+                   // 🟢 2. PADDING to pb-96 for huge clearance on mobile
                    <div className="w-full max-w-5xl mx-auto pt-20 md:pt-24 pb-96 px-4 sm:px-6 lg:px-8">
                       {chatHistory.map((msg, idx) => (
                          <div key={idx} className="group mb-12 md:mb-16 border-b border-white/5 pb-12 md:pb-16 last:border-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
