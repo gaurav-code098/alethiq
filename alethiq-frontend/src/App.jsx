@@ -565,14 +565,22 @@ function App() {
   const handleScroll = (e) => { const { scrollTop, scrollHeight, clientHeight } = e.target; if (scrollHeight - scrollTop - clientHeight > 50) setAutoScroll(false); else setAutoScroll(true); };
   useEffect(() => { if (isStreaming && autoScroll && messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "auto" }); }, [data, isStreaming, autoScroll]);
   
-  const handleSearch = (searchQuery, image = null) => { 
-    if (!searchQuery?.trim() && !image) return; 
+  const handleSearch = (searchQuery, images = []) => { 
+    if (!searchQuery?.trim() && (!images || images.length === 0)) return; 
+    
+
     const currentHistory = [...chatHistory]; 
-    setChatHistory(prev => [...prev, { type: 'user', content: searchQuery, image: image }]); 
+    
+    setChatHistory(prev => [...prev, { type: 'user', content: searchQuery, images: images }]); 
+    
+
     setQuery(""); 
     setLastQuery(searchQuery); 
     setAutoScroll(true); 
-    streamData(searchQuery, "fast", currentHistory, image); 
+    
+    const imagePayload = images && images.length > 0 ? images[0] : null;
+ 
+    streamData(searchQuery, "fast", currentHistory, imagePayload); 
   };
 
   const handleNewChat = () => { setChatHistory([]); setQuery(""); setCurrentThreadId(null); stopStream(); };
