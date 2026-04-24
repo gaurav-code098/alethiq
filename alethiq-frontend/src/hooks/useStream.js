@@ -71,7 +71,7 @@ export const useStream = () => {
                 for (const line of lines) {
                     const trimmed = line.trim();
                     if (!trimmed || trimmed === "[DONE]") continue;
-                    
+                    console.log("📥 Raw line from backend:", trimmed);
                     const jsonStr = trimmed.startsWith("data: ") ? trimmed.slice(6) : trimmed;
                     
                     try {
@@ -87,7 +87,7 @@ export const useStream = () => {
                         // Handle Sources
                         if (parsed.sources) setSources(parsed.sources);
                     } catch (e) {
-                        // Ignore parse errors for split chunks
+                        console.error("❌ JSON Parse Error:", e, "on string:", jsonStr);
                     }
                 }
             }
