@@ -1,5 +1,8 @@
 package com.alethiq.backend.service;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.http.MediaType;
@@ -17,7 +20,8 @@ public class AiStreamService {
     @Value("${HUGGINGFACE_API_TOKEN}")
     private String hfToken;
 
-    public AiStreamService(WebClient.Builder webClientBuilder, 
+    public AiStreamService(WebClient.Builder webClientBuilder,
+                           
                            @Value("${PYTHON_SERVICE_URL:https://gaurav-code098-alethiq.hf.space}") String aiEngineUrl) {
         this.webClient = webClientBuilder.baseUrl(aiEngineUrl).build();
     }
