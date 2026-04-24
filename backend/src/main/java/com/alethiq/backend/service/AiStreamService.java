@@ -1,12 +1,13 @@
-// FORCE BUILD UPDATE 1
 package com.alethiq.backend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,11 +16,16 @@ public class AiStreamService {
 
     private final WebClient webClient;
 
+    // 🟢 SECURE: Pulls the token from your application.properties
+    @Value("${huggingface.api.token}")
+    private String hfToken;
+
     // 🟢 REMOVED: ChatService dependency (not needed here anymore)
 
-    public AiStreamService(WebClient.Builder webClientBuilder) {
-        String pythonUrl = "https://gaurav-code098-alethiq.hf.space";
-        this.webClient = webClientBuilder.baseUrl(pythonUrl).build();
+    public AiStreamService(WebClient.Builder webClientBuilder, 
+                           @Value("${ai.engine.url:https://gaurav-code098-alethiq.hf.space}") String aiEngineUrl) {
+        // Now uses a configurable URL, defaulting to your Space
+        this.webClient = webClientBuilder.baseUrl(aiEngineUrl).build();
     }
 
     public Flux<String> streamAnswer(String rawQueryJson, String username, String fast) {
@@ -32,10 +38,12 @@ public class AiStreamService {
 
         Map<String, String> body = new HashMap<>();
         body.put("query", cleanQuery);
-        body.put("mode", "fast");
+        body.put("mode", fast != null ? fast : "fast");
 
         return webClient.post()
                 .uri("/query-stream")
+                // 🟢 ADDED: The VIP Pass to get through the private Hugging Face Space
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + hfToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .bodyValue(body)
