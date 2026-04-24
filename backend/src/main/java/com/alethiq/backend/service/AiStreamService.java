@@ -1,7 +1,5 @@
 package com.alethiq.backend.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.http.MediaType;
@@ -16,24 +14,16 @@ public class AiStreamService {
 
     private final WebClient webClient;
 
-    // 🟢 SECURE: Pulls the token from your application.properties
-    @Value("${huggingface.api.token}")
-    private String hfToken;
-
-    // 🟢 REMOVED: ChatService dependency (not needed here anymore)
-
-    public AiStreamService(WebClient.Builder webClientBuilder, 
-                           @Value("${ai.engine.url:https://gaurav-code098-alethiq.hf.space}") String aiEngineUrl) {
-        // Now uses a configurable URL, defaulting to your Space
-        this.webClient = webClientBuilder.baseUrl(aiEngineUrl).build();
+    public AiStreamService(WebClient.Builder webClientBuilder) {
+        // 🟢 RESTORED: Original hardcoded public URL
+        String pythonUrl = "https://gaurav-code098-alethiq.hf.space";
+        this.webClient = webClientBuilder.baseUrl(pythonUrl).build();
     }
 
     public Flux<String> streamAnswer(String rawQueryJson, String username, String fast) {
         System.out.println("🚀 Stream Request for: " + username);
 
- 
         String cleanQuery = rawQueryJson;
-
 
         Map<String, String> body = new HashMap<>();
         body.put("query", cleanQuery);
@@ -41,8 +31,7 @@ public class AiStreamService {
 
         return webClient.post()
                 .uri("/query-stream")
-              
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + hfToken)
+                // 🟢 REMOVED: Hugging Face Authorization header
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .bodyValue(body)
@@ -50,7 +39,5 @@ public class AiStreamService {
                 .onStatus(HttpStatusCode::isError, response -> response.createException())
                 .bodyToFlux(String.class)
                 .doOnError(e -> System.out.println("🔥 Stream Error: " + e.getMessage()));
-                
-   \
     }
 }
