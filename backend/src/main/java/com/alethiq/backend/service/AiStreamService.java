@@ -37,6 +37,7 @@ public class AiStreamService {
         return webClient.post()
                 .uri("/query-stream")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + hfToken)
+                .header("X-Accel-Buffering", "no")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .bodyValue(body)
