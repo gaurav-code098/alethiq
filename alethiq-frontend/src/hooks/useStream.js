@@ -72,7 +72,7 @@ export const useStream = () => {
                     const trimmed = line.trim();
                     if (!trimmed || trimmed === "[DONE]") continue;
                     console.log("📥 Raw line from backend:", trimmed);
-                    const jsonStr = trimmed.startsWith("data: ") ? trimmed.slice(6) : trimmed;
+                    const jsonStr = trimmed.replace(/^data:\s*/, "")
                     
                     try {
                         const parsed = JSON.parse(jsonStr);
