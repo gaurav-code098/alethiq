@@ -8,8 +8,8 @@ export const useStream = () => {
     const [isStreaming, setIsStreaming] = useState(false);
     const abortControllerRef = useRef(null);
 
-    // 🟢 Point directly to Python (Hugging Face)
-    const STREAM_URL = "https://gaurav-code098-alethiq.hf.space/query-stream"; 
+    // 🟢 CRITICAL FIX: Point to Spring Boot, NOT Hugging Face
+    const STREAM_URL = "https://alethiq.onrender.com/api/chat/stream"; 
 
     const streamData = useCallback(async (query, mode = "fast", history = [], image = null) => {
         // 1. Abort previous request
@@ -28,19 +28,29 @@ export const useStream = () => {
             const payload = { 
                 query: query, 
                 mode: mode,
-                image: image || null // <--- 🟢 CRITICAL FIX: Send the image data
+                image: image || null
             };
+
+            // 🟢 SECURITY FIX: Grab the token and prepare headers
+            const token = localStorage.getItem("alethiq_token");
+            const headers = {
+                "Content-Type": "application/json",
+            };
+            
+            // Only attach the ID card if they actually logged in
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
 
             const response = await fetch(STREAM_URL, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: headers, // <-- Use the secured headers here
                 body: JSON.stringify(payload),
                 signal: abortControllerRef.current.signal
             });
 
             if (!response.ok) {
+                // If Spring Boot throws a 401 Unauthorized, we can catch it here
                 throw new Error(response.statusText || "Stream Error");
             }
 
