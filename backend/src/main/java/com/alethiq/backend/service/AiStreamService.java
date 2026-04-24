@@ -14,30 +14,27 @@ public class AiStreamService {
 
     private final WebClient webClient;
 
-    public AiStreamService(WebClient.Builder webClientBuilder) {
-        // 🟢 RESTORED: Original hardcoded public URL
-        String pythonUrl = "https://gaurav-code098-alethiq.hf.space";
-        this.webClient = webClientBuilder.baseUrl(pythonUrl).build();
+    @Value("${HUGGINGFACE_API_TOKEN}")
+    private String hfToken;
+
+    public AiStreamService(WebClient.Builder webClientBuilder, 
+                           @Value("${PYTHON_SERVICE_URL:https://gaurav-code098-alethiq.hf.space}") String aiEngineUrl) {
+        this.webClient = webClientBuilder.baseUrl(aiEngineUrl).build();
     }
 
     public Flux<String> streamAnswer(String rawQueryJson, String username, String fast) {
-        System.out.println("🚀 Stream Request for: " + username);
-
-        String cleanQuery = rawQueryJson;
-
         Map<String, String> body = new HashMap<>();
-        body.put("query", cleanQuery);
+        body.put("query", rawQueryJson);
         body.put("mode", fast != null ? fast : "fast");
 
         return webClient.post()
                 .uri("/query-stream")
-                // 🟢 REMOVED: Hugging Face Authorization header
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + hfToken) // <-- The VIP Pass
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .bodyValue(body)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> response.createException())
-                .bodyToFlux(String.class)
-                .doOnError(e -> System.out.println("🔥 Stream Error: " + e.getMessage()));
+                .bodyToFlux(String.class);
     }
 }
