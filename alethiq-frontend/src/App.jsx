@@ -582,19 +582,24 @@ function App() {
   const saveToHistory = async (userQ, aiA) => { if (!token) return; try { const res = await fetch(`${API_BASE}/api/chat/save-conversation`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ query: userQ, answer: aiA, conversationId: currentThreadId }) }); if (res.ok) { const data = await res.json(); if (data.conversationId) { setCurrentThreadId(data.conversationId); } fetchHistory(); } } catch (e) { console.error("Save failed:", e); } };
   const handleLoadThread = (thread) => { setChatHistory([]); setCurrentThreadId(thread.id); const formattedMessages = thread.messages.map(msg => ({ type: msg.role === "USER" ? "user" : "ai", content: msg.content })); setChatHistory(formattedMessages); if(isMobile) setIsSidebarOpen(false); };
   
+  // 🟢 NO MORE NETWORK CALL! Instant local suggestions.
   useEffect(() => { 
-      const fetchSuggestions = async () => { 
-          try { 
-              const res = await fetch(`${SUGGESTIONS_URL}/get-suggestions`); 
-              if (res.ok) { setSuggestions(await res.json()); } 
-              else throw new Error(); 
-          } catch (e) { 
-              const fallback = ["Philosophy of Stoicism", "Edge Computing Use Cases", "Smart Agriculture & IoT", "Ancient Egyptian Mythology"].sort(() => 0.5 - Math.random()); 
-              setSuggestions(fallback.slice(0, 4)); 
-          } finally { setLoadingSuggestions(false); } 
-      }; 
-      fetchSuggestions(); 
-  }, []); 
+      const topic_pool = [
+        "Ancient Egyptian Mythology", "Blockchain in Supply Chain", "Psychology of Color",
+        "Autonomous Underwater Drones", "Vertical Farming Tech", "Edge Computing",
+        "History of Samurai Culture", "Climate Change & Coral Reefs", "NLP in Education",
+        "Astrobiology and Life Beyond Earth", "Microplastics in Food", "Digital Nomad Lifestyle",
+        "Robotics in Elderly Care", "Evolution of Electric Motorcycles", "Philosophy of Stoicism",
+        "Augmented Reality in Retail", "Behavioral Economics", "Renewable Energy Storage",
+        "Cultural Impact of K-Pop", "Ethical Hacking", "3D Printing in Construction",
+        "Wildlife Conservation with AI", "History of the Silk Road", "Smart Agriculture & IoT"
+      ];
+      
+      // Shuffle and pick 4
+      const shuffled = topic_pool.sort(() => 0.5 - Math.random());
+      setSuggestions(shuffled.slice(0, 4));
+      setLoadingSuggestions(false);
+  }, []);
 
   const handleScroll = (e) => { const { scrollTop, scrollHeight, clientHeight } = e.target; if (scrollHeight - scrollTop - clientHeight > 50) setAutoScroll(false); else setAutoScroll(true); };
   useEffect(() => { if (isStreaming && autoScroll && messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "auto" }); }, [data, isStreaming, autoScroll]);
