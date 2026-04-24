@@ -31,10 +31,9 @@ public class AiStreamService {
     public Flux<String> streamAnswer(String rawQueryJson, String username, String fast) {
         System.out.println("🚀 Stream Request for: " + username);
 
-        // Parse query (simple version)
+ 
         String cleanQuery = rawQueryJson;
-        // (Optional: You can keep your JSON parsing logic here if you want, 
-        // but passing the raw string is often safer if the frontend sends a simple string)
+
 
         Map<String, String> body = new HashMap<>();
         body.put("query", cleanQuery);
@@ -42,7 +41,7 @@ public class AiStreamService {
 
         return webClient.post()
                 .uri("/query-stream")
-                // 🟢 ADDED: The VIP Pass to get through the private Hugging Face Space
+              
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + hfToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
@@ -52,7 +51,6 @@ public class AiStreamService {
                 .bodyToFlux(String.class)
                 .doOnError(e -> System.out.println("🔥 Stream Error: " + e.getMessage()));
                 
-                // 🟢 REMOVED: .doOnComplete(saveConversation)
-                // We now rely on the Frontend (App.jsx) to call /save-conversation
+   \
     }
 }
